@@ -91,6 +91,7 @@ Pipfile.lock
 
 # AWS
 .aws/
+.aws-sam/
 
 # Temporary files
 *.tmp
