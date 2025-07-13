@@ -1,14 +1,16 @@
 #!/bin/bash
-"""
-Run FeedMiner test suite.
-Usage: ./scripts/run_tests.sh [test_type]
-"""
+# Run FeedMiner test suite.
+# Usage: ./scripts/run_tests.sh [test_type]
 
 set -e
 
-# Activate virtual environment if not already active
-if [[ -z "$VIRTUAL_ENV" ]]; then
-    source feedminer-env/bin/activate
+# Use virtual environment Python if available, otherwise system Python
+if [[ -f "feedminer-env/bin/python" ]]; then
+    PYTHON="./feedminer-env/bin/python"
+    echo "🔄 Using virtual environment Python..."
+else
+    PYTHON="python3"
+    echo "🔄 Using system Python..."
 fi
 
 # Default to all tests if no argument provided
@@ -20,22 +22,22 @@ echo "================================"
 case $TEST_TYPE in
     "api"|"rest")
         echo "🔄 Running REST API tests..."
-        python tests/test_api.py
+        $PYTHON tests/test_api.py
         ;;
     "websocket"|"ws")
         echo "🔄 Running WebSocket tests..."
-        python tests/test_websocket.py
+        $PYTHON tests/test_websocket.py
         ;;
     "all")
         echo "🔄 Running all tests..."
         echo ""
         echo "📡 REST API Tests:"
         echo "-------------------"
-        python tests/test_api.py
+        $PYTHON tests/test_api.py
         echo ""
         echo "🔌 WebSocket Tests:"
         echo "-------------------"
-        python tests/test_websocket.py
+        $PYTHON tests/test_websocket.py
         ;;
     "pytest")
         echo "🔄 Running pytest suite..."
