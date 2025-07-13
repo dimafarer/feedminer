@@ -1,0 +1,8 @@
+boto3
+botocore
+anthropic
+pydantic
+fastapi
+uvicorn
+python-multipart
+email-validator

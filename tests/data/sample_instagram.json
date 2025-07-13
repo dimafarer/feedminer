@@ -1,0 +1,51 @@
+{
+  "type": "instagram_saved",
+  "user_id": "test_user_123",
+  "metadata": {
+    "exported_at": "2025-07-13T12:00:00Z",
+    "total_items": 3,
+    "export_version": "1.0"
+  },
+  "content": {
+    "saved_posts": [
+      {
+        "post_id": "C8vXyZwA1bN",
+        "author": "coffee_roaster_daily",
+        "caption": "Perfect morning brew ☕ Ethiopian single origin with notes of chocolate and citrus. What's your favorite brewing method?",
+        "media_type": "photo",
+        "saved_at": "2024-12-15T09:30:00Z",
+        "hashtags": ["#coffee", "#ethiopian", "#singleorigin", "#brewing"],
+        "location": "Portland, Oregon",
+        "engagement": {
+          "likes": 1247,
+          "comments": 89
+        }
+      },
+      {
+        "post_id": "C8wABcDE2fG",
+        "author": "ai_research_hub",
+        "caption": "New paper on transformer architectures and their applications in multimodal learning. Link in bio for full research.",
+        "media_type": "carousel",
+        "saved_at": "2024-12-14T14:15:00Z",
+        "hashtags": ["#AI", "#MachineLearning", "#Research", "#Transformers"],
+        "engagement": {
+          "likes": 2847,
+          "comments": 156
+        }
+      },
+      {
+        "post_id": "C8xYzAB3gH",
+        "author": "sustainable_living_tips",
+        "caption": "5 ways to reduce plastic waste in your daily routine. Small changes, big impact! 🌱",
+        "media_type": "reel",
+        "saved_at": "2024-12-13T16:45:00Z",
+        "hashtags": ["#sustainability", "#zerowaste", "#ecofriendly", "#environment"],
+        "duration": 45,
+        "engagement": {
+          "likes": 5632,
+          "comments": 234
+        }
+      }
+    ]
+  }
+}

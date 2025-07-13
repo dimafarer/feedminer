@@ -1,0 +1,629 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: FeedMiner - Universal saved content processor with Strands agents
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  
+  AnthropicApiKey:
+    Type: String
+    NoEcho: true
+    Description: Anthropic API key for Claude integration
+  
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: "http://localhost:3000,https://localhost:3000"
+    Description: Allowed CORS origins for WebSocket connections
+
+  EnableWebSocket:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: Enable WebSocket API (disable for SAM local development)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        ANTHROPIC_API_KEY: !Ref AnthropicApiKey
+        CONTENT_BUCKET: !Ref ContentBucket
+        WEBSOCKET_API_ENDPOINT: !If 
+          - ShouldCreateWebSocket
+          - !Sub "${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+          - "DISABLED"
+        DYNAMODB_TABLE_PREFIX: !Sub "${AWS::StackName}-${Environment}"
+    Tracing: Active
+    Architectures:
+      - arm64
+  
+
+Conditions:
+  ShouldCreateWebSocket: !Equals [!Ref EnableWebSocket, "true"]
+
+Resources:
+  # WebSocket API for streaming responses
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Condition: ShouldCreateWebSocket
+    Properties:
+      Name: !Sub "${AWS::StackName}-websocket-${Environment}"
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: !Ref Environment
+      AutoDeploy: true
+
+  # WebSocket Routes
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: "$connect"
+      AuthorizationType: NONE
+      Target: !Sub "integrations/${ConnectIntegration}"
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: "$disconnect"
+      AuthorizationType: NONE
+      Target: !Sub "integrations/${DisconnectIntegration}"
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: "$default"
+      AuthorizationType: NONE
+      Target: !Sub "integrations/${DefaultIntegration}"
+
+  # WebSocket Integrations
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketConnectFunction.Arn}/invocations"
+
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketDisconnectFunction.Arn}/invocations"
+
+  DefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Condition: ShouldCreateWebSocket
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketDefaultFunction.Arn}/invocations"
+
+
+
+  # Connection management for WebSocket
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-connections-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  # Main content storage table
+  ContentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-content-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: contentId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserTimeIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  # Processing jobs tracking
+  JobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-jobs-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: jobId
+          AttributeType: S
+        - AttributeName: contentId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: jobId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ContentIndex
+          KeySchema:
+            - AttributeName: contentId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  # S3 bucket for content storage
+  ContentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+            AllowedOrigins: !Ref AllowedOrigins
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+              - TransitionInDays: 90
+                StorageClass: GLACIER
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt ContentAnalysisAgent.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: uploads/
+    DependsOn:
+      - ContentAnalysisAgentS3Permission
+
+  # WebSocket Lambda functions
+  WebSocketConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-websocket-connect-${Environment}"
+      CodeUri: src/websocket/
+      Handler: connect.handler
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: !Ref ConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+
+  WebSocketDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-websocket-disconnect-${Environment}"
+      CodeUri: src/websocket/
+      Handler: disconnect.handler
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: !Ref ConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+
+  WebSocketDefaultFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-websocket-default-${Environment}"
+      CodeUri: src/websocket/
+      Handler: default.handler
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: !Ref ConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
+
+  # Lambda Permissions for WebSocket API
+  WebSocketConnectPermission:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldCreateWebSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketConnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*"
+
+  WebSocketDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldCreateWebSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketDisconnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*"
+
+  WebSocketDefaultPermission:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldCreateWebSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WebSocketDefaultFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*"
+
+  # Strands agent Lambda functions
+  ContentAnalysisAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-content-analysis-${Environment}"
+      CodeUri: src/agents/
+      Handler: content_analysis.handler
+      Timeout: 300
+      MemorySize: 1024
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          JOBS_TABLE: !Ref JobsTable
+          CONTENT_BUCKET: !Sub "${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}/*"
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
+
+  SummarizationAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-summarization-${Environment}"
+      CodeUri: src/agents/
+      Handler: summarization.handler
+      Timeout: 300
+      MemorySize: 1024
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          JOBS_TABLE: !Ref JobsTable
+          CONTENT_BUCKET: !Sub "${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}/*"
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
+
+  ExtractionAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-extraction-${Environment}"
+      CodeUri: src/agents/
+      Handler: extraction.handler
+      Timeout: 300
+      MemorySize: 1024
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          JOBS_TABLE: !Ref JobsTable
+          CONTENT_BUCKET: !Sub "${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}/*"
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
+
+  # API Gateway for REST endpoints
+  FeedMinerApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-api-${Environment}"
+      StageName: !Ref Environment
+      TracingEnabled: true
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 200
+
+  # REST API Lambda functions
+  ContentUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-content-upload-${Environment}"
+      CodeUri: src/api/
+      Handler: upload.handler
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - S3WritePolicy:
+            BucketName: !Ref ContentBucket
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /upload
+            Method: POST
+
+  ContentListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-content-list-${Environment}"
+      CodeUri: src/api/
+      Handler: list.handler
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContentTable
+      Events:
+        ListApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /content
+            Method: GET
+
+  ContentGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-content-get-${Environment}"
+      CodeUri: src/api/
+      Handler: get.handler
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContentTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}/*"
+      Events:
+        GetApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /content/{contentId}
+            Method: GET
+
+  # Job management
+  JobStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-job-status-${Environment}"
+      CodeUri: src/api/
+      Handler: job_status.handler
+      Environment:
+        Variables:
+          JOBS_TABLE: !Ref JobsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref JobsTable
+      Events:
+        JobStatusApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /jobs/{jobId}
+            Method: GET
+
+  # S3 Lambda Permission for Content Analysis
+  ContentAnalysisAgentS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ContentAnalysisAgent
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+
+  # Processing orchestrator
+  ProcessingOrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-processing-orchestrator-${Environment}"
+      CodeUri: src/orchestrator/
+      Handler: orchestrator.handler
+      Timeout: 60
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          JOBS_TABLE: !Ref JobsTable
+          CONTENT_ANALYSIS_FUNCTION: !Ref ContentAnalysisAgent
+          SUMMARIZATION_FUNCTION: !Ref SummarizationAgent
+          EXTRACTION_FUNCTION: !Ref ExtractionAgent
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ContentAnalysisAgent
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SummarizationAgent
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ExtractionAgent
+      Events:
+        ContentTableStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt ContentTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
+Outputs:
+  WebSocketApiEndpoint:
+    Condition: ShouldCreateWebSocket
+    Description: WebSocket API Gateway endpoint URL
+    Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Export:
+      Name: !Sub "${AWS::StackName}-WebSocketEndpoint-${Environment}"
+
+  RestApiEndpoint:
+    Description: REST API Gateway endpoint URL
+    Value: !Sub "https://${FeedMinerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Export:
+      Name: !Sub "${AWS::StackName}-RestApiEndpoint-${Environment}"
+
+  ContentBucketName:
+    Description: S3 bucket for content storage
+    Value: !Ref ContentBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-ContentBucket-${Environment}"
+
+  ConnectionsTableName:
+    Description: DynamoDB table for WebSocket connections
+    Value: !Ref ConnectionsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ConnectionsTable-${Environment}"
+
+  ContentTableName:
+    Description: DynamoDB table for content metadata
+    Value: !Ref ContentTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ContentTable-${Environment}"
+
+  JobsTableName:
+    Description: DynamoDB table for job tracking
+    Value: !Ref JobsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-JobsTable-${Environment}"
