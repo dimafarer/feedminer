@@ -601,12 +601,16 @@ This README provides complete context for Claude Desktop to understand:
 
 **Key Files for Claude Desktop**
 - `README.md`: Complete system documentation (this file)
-- `template.yaml`: Infrastructure as code
+- `template.yaml`: Infrastructure as code with comprehensive cost tagging
 - `tests/test_api.py` & `tests/test_websocket.py`: Validation procedures
 - `src/agents/instagram_parser.py`: AI processing reference implementation
 - `requirements-dev.txt`: Development dependencies
 - `scripts/`: Automation scripts for common tasks
-- `docs/`: Additional API and deployment documentation
+- `docs/`: Additional API, deployment, and cost management documentation
+  - `AWS_COST_TAGGING_STRATEGY.md`: Enterprise-level tagging strategy
+  - `COST_TRACKING_GUIDE.md`: Practical cost monitoring and optimization
+  - `API.md`: REST and WebSocket API reference
+  - `DEPLOYMENT.md`: Deployment and configuration guide
 
 ### External System Integration
 
