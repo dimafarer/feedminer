@@ -53,11 +53,12 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
    - **Goal**: Multi-provider setup leveraging Strands' model-swapping capabilities
    - **Timeline**: Model performance comparison by July 18
 
-2. **Instagram Content Analysis**
-   - Testing with real Instagram export data
-   - Content categorization and pattern discovery
-   - Behavioral insights extraction
-   - Performance optimization based on actual usage
+2. **Instagram Goal-Oriented Analysis** 🎯
+   - **Real Data Processing**: Successfully tested with 177 actual Instagram saves
+   - **Goal Area Identification**: Fitness (38.2%), Learning (20.6%), Business, Creative, Technology
+   - **Behavioral Pattern Discovery**: Content preferences, saving habits, temporal patterns
+   - **Actionable Recommendations**: Generated specific 30-day, 90-day, and 1-year goals
+   - **Interest Categorization**: Automated analysis of account types and motivational indicators
 
 ### 🔧 Technical Implementation Details
 
@@ -255,21 +256,57 @@ python tests/test_websocket.py  # WebSocket tests
 ./scripts/run_tests.sh pytest     # Pytest suite
 ```
 
-### Sample Test Data
-The test scripts include realistic Instagram saved content data:
+### Instagram Data Format Handling
+
+**FeedMiner supports both real Instagram export format and our enhanced processing format:**
+
+**Real Instagram Export Format** (from Instagram data download):
+```json
+{
+  "saved_saved_media": [
+    {
+      "title": "rishfits",
+      "string_map_data": {
+        "Saved on": {
+          "href": "https://www.instagram.com/reel/DDXmi2qRUUD/",
+          "timestamp": 1733969519
+        }
+      }
+    }
+  ]
+}
+```
+
+**FeedMiner Enhanced Format** (after processing and goal analysis):
 ```json
 {
   "type": "instagram_saved",
-  "user_id": "test_user_123",
+  "user_id": "real_user",
+  "metadata": {
+    "exported_at": "2025-07-14T13:58:07Z",
+    "total_items": 177,
+    "analysis_focus": "goal_setting_and_motivation",
+    "patterns_discovered": {
+      "goal_indicators": [
+        {
+          "goal_area": "Physical Fitness",
+          "evidence_strength": "High",
+          "save_count": 12,
+          "suggested_goals": ["Establish consistent workout routine"]
+        }
+      ]
+    }
+  },
   "content": {
     "saved_posts": [
       {
-        "post_id": "C8vXyZwA1bN",
-        "author": "coffee_roaster_daily",
-        "caption": "Perfect morning brew ☕ Ethiopian single origin...",
-        "media_type": "photo",
-        "hashtags": ["#coffee", "#ethiopian", "#singleorigin"],
-        "location": "Portland, Oregon"
+        "post_id": "DDXmi2qRUUD",
+        "author": "rishfits",
+        "caption": "Content from @rishfits - Fitness & Health Goals",
+        "media_type": "reel",
+        "saved_at": "2024-12-11T14:45:19Z",
+        "interest_category": "🏋️ Fitness & Health Goals",
+        "url": "https://www.instagram.com/reel/DDXmi2qRUUD/"
       }
     ]
   }
@@ -304,22 +341,32 @@ The test scripts include realistic Instagram saved content data:
    - Status updated to 'analyzed'
    - WebSocket notifications sent
 
-### Instagram Analysis Features
+### Instagram Goal-Oriented Analysis Features
 
-**Category Detection**
-- Technology (AI, coding, software)
-- Food & Dining (recipes, restaurants, cooking)
-- Travel & Adventure (destinations, experiences)
-- Fitness & Health (workouts, wellness)
-- Fashion & Style (clothing, trends)
-- Photography & Art (visual content, creativity)
+**Real Data Format Support**
+- Native Instagram export format (`saved_saved_media` structure)
+- Automatic transformation to enhanced analysis format
+- Preserves all temporal and behavioral data from exports
 
-**Insight Extraction**
-- Content preference patterns
-- Engagement behavior analysis
-- Temporal posting patterns
-- Cross-category relationships
-- Author influence mapping
+**Goal Area Detection** (Validated with Real Data)
+- **🏋️ Fitness & Health Goals**: Workout routines, strength training, wellness
+- **📚 Learning & Skill Development**: Courses, tutorials, educational content
+- **💼 Business & Entrepreneurship**: Personal branding, startup content, professional development
+- **🎨 Creative & Artistic Pursuits**: Music, art, design, creative expression
+- **💻 Technology & Innovation**: Tech tools, digital innovation, coding content
+
+**Behavioral Insight Extraction**
+- **Content Preference Analysis**: Reels vs Posts preference (learning style indicator)
+- **Temporal Pattern Recognition**: Peak motivation periods, consistency indicators
+- **Interest Distribution Mapping**: Quantified interest percentages for goal prioritization
+- **Author Influence Analysis**: Most-saved creators indicating deep interest areas
+- **Goal Evidence Strength**: High/Medium/Low confidence scoring for goal recommendations
+
+**Actionable Output**
+- **Specific Goal Recommendations**: Concrete, measurable goals aligned with interests
+- **Timeframe Planning**: 30-day, 90-day, and 1-year goal roadmaps
+- **Behavioral Insights**: Learning style preferences and motivation patterns
+- **Interest Categories**: Quantified distribution of attention and motivation
 
 **Output Format**
 ```json

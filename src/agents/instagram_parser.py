@@ -2,7 +2,14 @@
 Instagram JSON Parser Agent for FeedMiner.
 
 This Strands agent specializes in parsing Instagram saved content exports,
-extracting meaningful insights, and categorizing content for better organization.
+extracting goal-oriented insights, and categorizing content for personal development.
+
+SUPPORTED FORMATS:
+1. Real Instagram Export Format: {"saved_saved_media": [...]}
+2. FeedMiner Enhanced Format: {"type": "instagram_saved", "content": {"saved_posts": [...]}}
+
+The agent automatically detects format and transforms real Instagram exports
+into enhanced format with goal-setting insights and behavioral analysis.
 """
 
 import json

@@ -16,9 +16,28 @@ https://wqtfb6rv15.execute-api.us-west-2.amazonaws.com/dev
 
 Upload saved content for processing and analysis.
 
-**Current Status**: Basic JSON processing implemented, real data testing in progress.
+**Current Status**: Successfully tested with real Instagram data - supports both native export format and enhanced processing format with goal-oriented analysis.
 
-**Request Body:**
+**Request Body Options:**
+
+*Option 1: Real Instagram Export Format*
+```json
+{
+  "saved_saved_media": [
+    {
+      "title": "username",
+      "string_map_data": {
+        "Saved on": {
+          "href": "https://www.instagram.com/reel/ABC123/",
+          "timestamp": 1733969519
+        }
+      }
+    }
+  ]
+}
+```
+
+*Option 2: FeedMiner Enhanced Format*
 ```json
 {
   "type": "instagram_saved",

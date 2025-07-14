@@ -77,7 +77,7 @@ sam deploy --parameter-overrides \
 sam local start-api --parameter-overrides EnableWebSocket=false
 
 # Invoke specific function
-sam local invoke ContentUploadFunction --event tests/data/sample_instagram.json
+sam local invoke ContentUploadFunction --event tests/data/sample_instagram_enhanced_format.json
 ```
 
 ### Testing

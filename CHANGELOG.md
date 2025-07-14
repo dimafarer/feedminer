@@ -80,6 +80,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cost Tracking Operational**: Multi-dimensional allocation confirmed across all services
 - **Documentation Complete**: Enterprise strategy guide and practical implementation manual
 
+## [0.1.2] - 2025-07-14 - "Real Instagram Format Documentation Update"
+
+### Updated - Documentation Accuracy
+- **Instagram Format Support**: Updated all documentation to reflect real Instagram export structure
+- **Dual Format Handling**: Documented support for both real Instagram exports and enhanced FeedMiner format
+- **Sample Data Files**: Added real Instagram export sample alongside existing enhanced format sample
+- **API Documentation**: Updated request/response examples to show both supported formats
+- **Goal-Oriented Features**: Updated feature descriptions to reflect validated goal-setting capabilities
+
+### Enhanced Documentation
+- **README.md**: Updated Instagram analysis section with real capabilities and data format examples
+- **API.md**: Added dual format support documentation with real export structure examples
+- **Test Data**: Created `real_instagram_export_sample.json` and renamed existing sample for clarity
+- **Instagram Parser**: Updated code documentation to specify supported formats and auto-detection
+- **Deployment Guide**: Updated sample file references to maintain accuracy
+
+### Validation Results
+- **Real Format Processing**: Confirmed support for Instagram's `saved_saved_media` structure
+- **Goal Analysis Features**: Documented validated capabilities from 177-post real data test
+- **Behavioral Insights**: Updated feature list to reflect actual pattern discovery capabilities
+- **Format Transformation**: Documented automatic conversion from real exports to enhanced analysis
+
 ## [Unreleased] - Active Development
 
 ### [0.2.0] - Planned for July 16, 2025 - "Multi-Model AI Integration"
