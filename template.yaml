@@ -3,6 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: FeedMiner - Universal saved content processor with Strands agents
 
 Parameters:
+  # Core Application Parameters
   Environment:
     Type: String
     Default: dev
@@ -25,6 +26,105 @@ Parameters:
     AllowedValues: ["true", "false"]
     Description: Enable WebSocket API (disable for SAM local development)
 
+  # Cost Tagging Parameters - Project Management
+  ProjectName:
+    Type: String
+    Default: "feedMiner"
+    Description: Project identifier for cost allocation
+    
+  ResourceOwner:
+    Type: String
+    Default: "dima.farer@company.com"
+    Description: Technical owner/lead responsible for resources
+    
+  TeamName:
+    Type: String
+    Default: "AI-Platform"
+    AllowedValues: [AI-Platform, Data-Engineering, Backend-Services, DevOps]
+    Description: Responsible development team
+    
+  CostCenter:
+    Type: String
+    Default: "CC-1001"
+    Description: Budget allocation code for chargeback
+    
+  RequestedBy:
+    Type: String
+    Default: "product-team@company.com"
+    Description: Business stakeholder who requested the project
+
+  # Cost Tagging Parameters - Business Context
+  BusinessUnit:
+    Type: String
+    Default: "Engineering"
+    AllowedValues: [Engineering, Product, Research, Operations, Finance]
+    Description: Organizational unit for cost allocation
+    
+  BusinessValue:
+    Type: String
+    Default: "Experimental"
+    AllowedValues: [Revenue-Critical, Operational, Experimental, Research]
+    Description: Business importance classification
+    
+  CustomerImpact:
+    Type: String
+    Default: "Low"
+    AllowedValues: [High, Medium, Low]
+    Description: User-facing criticality level
+
+  # Cost Tagging Parameters - Operational
+  MonitoringLevel:
+    Type: String
+    Default: "Standard"
+    AllowedValues: [Basic, Standard, Detailed]
+    Description: Monitoring intensity and associated costs
+    
+  AutoShutdown:
+    Type: String
+    Default: "Disabled"
+    AllowedValues: [Enabled, Disabled]
+    Description: Automated resource shutdown for cost optimization
+    
+  SupportLevel:
+    Type: String
+    Default: "Business-Hours"
+    AllowedValues: [24x7, Business-Hours, Best-Effort]
+    Description: Support tier and associated costs
+    
+  MaintenanceWindow:
+    Type: String
+    Default: "Sunday-2AM-UTC"
+    Description: Scheduled maintenance window
+
+  # Cost Tagging Parameters - Version and Deployment
+  ApplicationVersion:
+    Type: String
+    Default: "0.1.0"
+    Description: Application version for release tracking
+    
+  DeploymentActor:
+    Type: String
+    Default: "manual-deployment"
+    Description: Who/what triggered the deployment
+    
+  DeploymentDate:
+    Type: String
+    Default: "2025-07-13"
+    Description: Deployment date for resource age tracking
+
+  # Cost Tagging Parameters - Compliance (Optional)
+  DataClassification:
+    Type: String
+    Default: "Internal"
+    AllowedValues: [Public, Internal, Confidential, Restricted]
+    Description: Data sensitivity level for compliance
+    
+  ComplianceFramework:
+    Type: String
+    Default: "SOC2"
+    AllowedValues: [SOC2, GDPR, HIPAA, PCI-DSS, None]
+    Description: Applicable regulatory framework
+
 Globals:
   Function:
     Runtime: python3.12
@@ -43,6 +143,50 @@ Globals:
     Tracing: Active
     Architectures:
       - arm64
+    # Comprehensive Cost Tracking Tags - Applied to ALL Lambda Functions
+    Tags:
+      # === PROJECT MANAGEMENT TAGS ===
+      Project: !Ref ProjectName
+      Owner: !Ref ResourceOwner
+      Team: !Ref TeamName
+      CostCenter: !Ref CostCenter
+      RequestedBy: !Ref RequestedBy
+      
+      # === ENVIRONMENT & LIFECYCLE TAGS ===
+      Environment: !Ref Environment
+      Stage: !Ref Environment
+      Version: !Ref ApplicationVersion
+      DeployedBy: !Ref DeploymentActor
+      CreatedDate: !Ref DeploymentDate
+      LastModified: !Ref "AWS::StackId"  # Will be updated on each deployment
+      
+      # === TECHNICAL ARCHITECTURE TAGS ===
+      Technology: "Serverless"
+      Architecture: "Event-Driven"
+      Runtime: "Python3.12"
+      Purpose: "Compute"
+      Component: "Lambda-Function"
+      
+      # === BUSINESS CONTEXT TAGS ===
+      BusinessUnit: !Ref BusinessUnit
+      Application: "feedMiner"
+      Service: "ContentProcessing"
+      CustomerImpact: !Ref CustomerImpact
+      BusinessValue: !Ref BusinessValue
+      
+      # === OPERATIONAL MANAGEMENT TAGS ===
+      MonitoringLevel: !Ref MonitoringLevel
+      BackupSchedule: "Automatic"  # Lambda code is version-controlled
+      AutoShutdown: !Ref AutoShutdown
+      MaintenanceWindow: !Ref MaintenanceWindow
+      SupportLevel: !Ref SupportLevel
+      
+      # === COMPLIANCE & GOVERNANCE TAGS ===
+      DataClassification: !Ref DataClassification
+      RetentionPeriod: "Code-Repository"  # Source code retention
+      ComplianceFramework: !Ref ComplianceFramework
+      EncryptionRequired: "Required"
+      AuditScope: "In-Scope"
   
 
 Conditions:
@@ -57,6 +201,24 @@ Resources:
       Name: !Sub "${AWS::StackName}-websocket-${Environment}"
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        Project: !Ref ProjectName
+        Owner: !Ref ResourceOwner
+        Team: !Ref TeamName
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        BusinessUnit: !Ref BusinessUnit
+        Application: "feedMiner"
+        # Resource-specific tags
+        Purpose: "WebSocket-API-Gateway"
+        Component: "Realtime-API"
+        Technology: "API-Gateway-V2"
+        CustomerImpact: "High"  # Real-time user experience
+        MonitoringLevel: !Ref MonitoringLevel
+        DataClassification: !Ref DataClassification
+        BusinessValue: !Ref BusinessValue
 
   WebSocketStage:
     Type: AWS::ApiGatewayV2::Stage
@@ -147,6 +309,42 @@ Resources:
         Enabled: true
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        - Key: "Project"
+          Value: !Ref ProjectName
+        - Key: "Owner"
+          Value: !Ref ResourceOwner
+        - Key: "Team"
+          Value: !Ref TeamName
+        - Key: "CostCenter"
+          Value: !Ref CostCenter
+        - Key: "Environment"
+          Value: !Ref Environment
+        - Key: "BusinessUnit"
+          Value: !Ref BusinessUnit
+        - Key: "Application"
+          Value: "feedMiner"
+        # Resource-specific tags
+        - Key: "Purpose"
+          Value: "WebSocket-Connection-Management"
+        - Key: "Component"
+          Value: "Realtime-DataStore"
+        - Key: "DataType"
+          Value: "Connection-Metadata"
+        - Key: "Technology"
+          Value: "DynamoDB"
+        - Key: "CustomerImpact"
+          Value: "High"  # WebSocket connections are user-facing
+        - Key: "BackupSchedule"
+          Value: "Point-in-Time-Recovery"
+        - Key: "RetentionPeriod"
+          Value: "2-hours-TTL"
+        - Key: "DataClassification"
+          Value: !Ref DataClassification
+        - Key: "MonitoringLevel"
+          Value: !Ref MonitoringLevel
 
   # Main content storage table
   ContentTable:
@@ -185,6 +383,44 @@ Resources:
             ProjectionType: ALL
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        - Key: "Project"
+          Value: !Ref ProjectName
+        - Key: "Owner"
+          Value: !Ref ResourceOwner
+        - Key: "Team"
+          Value: !Ref TeamName
+        - Key: "CostCenter"
+          Value: !Ref CostCenter
+        - Key: "Environment"
+          Value: !Ref Environment
+        - Key: "BusinessUnit"
+          Value: !Ref BusinessUnit
+        - Key: "Application"
+          Value: "feedMiner"
+        # Resource-specific tags
+        - Key: "Purpose"
+          Value: "Primary-Content-Storage"
+        - Key: "Component"
+          Value: "Core-DataStore"
+        - Key: "DataType"
+          Value: "Content-Metadata"
+        - Key: "Technology"
+          Value: "DynamoDB"
+        - Key: "CustomerImpact"
+          Value: !Ref CustomerImpact
+        - Key: "BackupSchedule"
+          Value: "Point-in-Time-Recovery"
+        - Key: "RetentionPeriod"
+          Value: "7-years"  # Long-term content analysis
+        - Key: "DataClassification"
+          Value: !Ref DataClassification
+        - Key: "MonitoringLevel"
+          Value: "Detailed"  # Critical data store
+        - Key: "BusinessValue"
+          Value: !Ref BusinessValue
 
   # Processing jobs tracking
   JobsTable:
@@ -217,6 +453,42 @@ Resources:
             ProjectionType: ALL
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        - Key: "Project"
+          Value: !Ref ProjectName
+        - Key: "Owner"
+          Value: !Ref ResourceOwner
+        - Key: "Team"
+          Value: !Ref TeamName
+        - Key: "CostCenter"
+          Value: !Ref CostCenter
+        - Key: "Environment"
+          Value: !Ref Environment
+        - Key: "BusinessUnit"
+          Value: !Ref BusinessUnit
+        - Key: "Application"
+          Value: "feedMiner"
+        # Resource-specific tags
+        - Key: "Purpose"
+          Value: "Async-Job-Tracking"
+        - Key: "Component"
+          Value: "Workflow-DataStore"
+        - Key: "DataType"
+          Value: "Job-Status"
+        - Key: "Technology"
+          Value: "DynamoDB"
+        - Key: "CustomerImpact"
+          Value: "Medium"  # Behind-the-scenes processing
+        - Key: "BackupSchedule"
+          Value: "Point-in-Time-Recovery"
+        - Key: "RetentionPeriod"
+          Value: "90-days"  # Job history
+        - Key: "DataClassification"
+          Value: !Ref DataClassification
+        - Key: "MonitoringLevel"
+          Value: !Ref MonitoringLevel
 
   # S3 bucket for content storage
   ContentBucket:
@@ -258,6 +530,48 @@ Resources:
                 Rules:
                   - Name: prefix
                     Value: uploads/
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        - Key: "Project"
+          Value: !Ref ProjectName
+        - Key: "Owner"
+          Value: !Ref ResourceOwner
+        - Key: "Team"
+          Value: !Ref TeamName
+        - Key: "CostCenter"
+          Value: !Ref CostCenter
+        - Key: "Environment"
+          Value: !Ref Environment
+        - Key: "BusinessUnit"
+          Value: !Ref BusinessUnit
+        - Key: "Application"
+          Value: "feedMiner"
+        # Resource-specific tags
+        - Key: "Purpose"
+          Value: "Content-Object-Storage"
+        - Key: "Component"
+          Value: "Primary-ObjectStore"
+        - Key: "DataType"
+          Value: "Raw-Content-Files"
+        - Key: "Technology"
+          Value: "S3"
+        - Key: "CustomerImpact"
+          Value: !Ref CustomerImpact
+        - Key: "BackupSchedule"
+          Value: "Cross-Region-Replication"
+        - Key: "RetentionPeriod"
+          Value: "7-years"  # Long-term content storage
+        - Key: "DataClassification"
+          Value: !Ref DataClassification
+        - Key: "EncryptionRequired"
+          Value: "Required"
+        - Key: "MonitoringLevel"
+          Value: "Detailed"  # Critical storage
+        - Key: "BusinessValue"
+          Value: !Ref BusinessValue
+        - Key: "StorageClass"
+          Value: "Intelligent-Tiering"
     DependsOn:
       - ContentAnalysisAgentS3Permission
 
@@ -453,6 +767,24 @@ Resources:
           ResourcePath: "/*"
           ThrottlingRateLimit: 100
           ThrottlingBurstLimit: 200
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        Project: !Ref ProjectName
+        Owner: !Ref ResourceOwner
+        Team: !Ref TeamName
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        BusinessUnit: !Ref BusinessUnit
+        Application: "feedMiner"
+        # Resource-specific tags
+        Purpose: "REST-API-Gateway"
+        Component: "HTTP-API"
+        Technology: "API-Gateway"
+        CustomerImpact: !Ref CustomerImpact
+        MonitoringLevel: !Ref MonitoringLevel
+        DataClassification: !Ref DataClassification
+        BusinessValue: !Ref BusinessValue
 
   # REST API Lambda functions
   ContentUploadFunction:
