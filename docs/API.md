@@ -1,5 +1,9 @@
 # FeedMiner API Documentation
 
+**Version**: 0.1.0 (MVP)  
+**Status**: Infrastructure Complete - Real Data Testing This Week  
+**AI Integration**: Anthropic API (current) + Bedrock (July 16)
+
 ## REST API Endpoints
 
 ### Base URL
@@ -10,7 +14,9 @@ https://wqtfb6rv15.execute-api.us-west-2.amazonaws.com/dev
 ### Upload Content
 **POST** `/upload`
 
-Upload saved content for analysis.
+Upload saved content for processing and analysis.
+
+**Current Status**: Basic JSON processing implemented, real data testing in progress.
 
 **Request Body:**
 ```json
@@ -28,7 +34,9 @@ Upload saved content for analysis.
 {
   "contentId": "uuid",
   "message": "Content uploaded successfully",
-  "s3Key": "uploads/uuid.json"
+  "s3Key": "uploads/uuid.json",
+  "status": "uploaded",
+  "type": "instagram_saved"
 }
 ```
 
@@ -59,11 +67,14 @@ Upload saved content for analysis.
 {
   "contentId": "uuid",
   "type": "instagram_saved",
-  "status": "analyzed",
-  "analysis": {...},
+  "status": "uploaded",
+  "createdAt": "2025-07-13T10:30:00Z",
+  "analysis": null,
   "rawContent": {...}
 }
 ```
+
+**Note**: Analysis field will be populated once AI processing is implemented (July 16).
 
 ### Job Status
 **GET** `/jobs/{jobId}`
@@ -106,13 +117,33 @@ wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev
 }
 ```
 
+## Current Implementation Status
+
+### ✅ Fully Functional
+- Content upload and storage (S3 + DynamoDB)
+- Content listing with pagination
+- Individual content retrieval
+- WebSocket connection management
+
+### 🔄 In Development (July 14-16)
+- Real Instagram data processing and validation
+- Bedrock AI integration and model comparison
+- Advanced error handling and retry logic
+
+### 📋 Coming Soon (July 16+)
+- AI-powered content analysis responses
+- Category detection and insights
+- Streaming analysis via WebSocket
+
 ## Error Handling
 
 All endpoints return consistent error responses:
 
 ```json
 {
-  "error": "Description of the error"
+  "error": "Description of the error",
+  "code": "ERROR_CODE",
+  "timestamp": "2025-07-13T10:30:00Z"
 }
 ```
 

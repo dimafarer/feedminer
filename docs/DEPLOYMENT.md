@@ -1,5 +1,8 @@
 # FeedMiner Deployment Guide
 
+**Version**: 0.1.0 (MVP)  
+**Status**: Infrastructure Complete - Bedrock Integration This Week (July 16)
+
 ## Prerequisites
 
 1. **AWS CLI** configured with appropriate permissions
@@ -17,10 +20,10 @@ source feedminer-env/bin/activate
 
 ### 2. Deploy to AWS
 ```bash
-# With Anthropic API key
+# Current: With Anthropic API key (for rapid prototyping)
 ./scripts/deploy.sh dev sk-ant-your-key-here
 
-# With Bedrock (recommended)
+# Coming July 16: With Bedrock (for model comparison)
 ./scripts/deploy.sh dev
 ```
 
@@ -33,8 +36,8 @@ source feedminer-env/bin/activate
 
 ### 1. Build Application
 ```bash
-sam build
 sam validate --lint
+sam build
 ```
 
 ### 2. Deploy
