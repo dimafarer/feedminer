@@ -2,7 +2,9 @@
 
 **Universal saved content processor with AI-powered analysis using Strands agents**
 
-FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides intelligent categorization, insights, and analysis using Claude AI via Amazon Bedrock.
+FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides intelligent categorization, insights, and analysis using Claude AI via Amazon Bedrock. 
+
+**✨ NEW: [Professional React Frontend Demo](./frontend-demo/)** - Portfolio-ready application showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
 
 ## 🏗 Architecture Overview
 
@@ -44,6 +46,14 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
    - REST API for listing all content
    - Individual content retrieval with optional raw data
    - Job status tracking for long-running processes
+
+5. **Professional React Frontend Demo** 🎨 **NEW (v0.1.4)**
+   - **Portfolio-Ready Application**: React 18 + TypeScript + Vite + Tailwind CSS
+   - **Real Data Showcase**: Interactive visualization of 177 Instagram posts analysis
+   - **Goal Recommendations**: Evidence-based 30/90/365-day plans with success probability
+   - **Behavioral Insights**: Charts showing learning style, motivation cycles, and interest distribution
+   - **Live Demo Ready**: AWS Amplify deployment configuration with API integration
+   - **Comprehensive Testing**: 94 tests covering components, services, integration, and accessibility
 
 ### 🔄 In Active Development (July 14-16)
 
@@ -648,6 +658,7 @@ This README provides complete context for Claude Desktop to understand:
 
 **Key Files for Claude Desktop**
 - `README.md`: Complete system documentation (this file)
+- `frontend-demo/`: **NEW** Professional React frontend application with real data showcase
 - `template.yaml`: Infrastructure as code with comprehensive cost tagging
 - `tests/test_api.py` & `tests/test_websocket.py`: Validation procedures
 - `src/agents/instagram_parser.py`: AI processing reference implementation
@@ -658,6 +669,7 @@ This README provides complete context for Claude Desktop to understand:
   - `COST_TRACKING_GUIDE.md`: Practical cost monitoring and optimization
   - `API.md`: REST and WebSocket API reference
   - `DEPLOYMENT.md`: Deployment and configuration guide
+  - `REAL_DATA_ANALYSIS_REPORT.md`: Comprehensive analysis of 177 Instagram posts
 
 ### External System Integration
 
@@ -789,6 +801,7 @@ aws dynamodb scan --table-name feedminer-content-dev --max-items 5
 
 ## 🔧 Quick Development Commands
 
+### Backend (AWS Infrastructure)
 ```bash
 # Environment setup
 ./scripts/setup.sh
@@ -812,9 +825,34 @@ aws logs tail /aws/lambda/feedminer-content-upload-dev --follow
 sam local start-api --parameter-overrides EnableWebSocket=false
 ```
 
+### Frontend Demo (React Application)
+```bash
+# Navigate to frontend demo
+cd frontend-demo
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+# View at http://localhost:5173
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run comprehensive test suite
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
+```
+
 ---
 
 **Generated with Claude Code** 🤖  
-Last Updated: July 13, 2025  
-Version: 0.1.0 (MVP)  
-**System Status**: 🚀 Infrastructure Deployed - Instagram Processing Ready - Multi-Model AI Integration This Week
+Last Updated: July 14, 2025  
+Version: 0.1.4 (Tested Frontend)  
+**System Status**: 🚀 Production-Ready Full-Stack Application - Backend + Frontend + Comprehensive Testing

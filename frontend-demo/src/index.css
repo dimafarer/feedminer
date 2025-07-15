@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 m-0 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 border border-gray-200;
+  }
+  
+  .metric-card {
+    @apply bg-gradient-to-br from-white to-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow;
+  }
+}
+
+.processing-animation {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading 2s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

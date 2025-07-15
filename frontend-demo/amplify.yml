@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  environment:
+    variables:
+      # Build-time environment variables
+      VITE_API_BASE_URL: https://wqtfb6rv15.execute-api.us-west-2.amazonaws.com/dev
+      VITE_WEBSOCKET_URL: wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev
+      VITE_APP_NAME: FeedMiner Demo
