@@ -1,0 +1,47 @@
+2025-07-15T12:58:10.275Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2025-07-15T12:58:10.954Z [INFO]: # Cloning repository: git@github.com:dimafarer/feedminer.git
+2025-07-15T12:58:12.013Z [INFO]: 
+2025-07-15T12:58:12.013Z [INFO]: Cloning into 'feedminer'...
+2025-07-15T12:58:12.013Z [INFO]: # Checking for Git submodules at: /codebuild/output/src616855743/src/feedminer/.gitmodules
+2025-07-15T12:58:12.019Z [INFO]: # Retrieving environment cache...
+2025-07-15T12:58:12.063Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2025-07-15T12:58:12.063Z [INFO]: ---- Setting Up SSM Secrets ----
+2025-07-15T12:58:12.063Z [INFO]: SSM params {"Path":"/amplify/d1txsc36hbt4ub/master/","WithDecryption":true}
+2025-07-15T12:58:12.110Z [WARNING]: !Failed to set up process.env.secrets
+2025-07-15T12:58:13.097Z [INFO]: # No package override configuration found.
+2025-07-15T12:58:13.101Z [INFO]: # Retrieving cache...
+2025-07-15T12:58:13.153Z [INFO]: # Retrieved cache
+2025-07-15T12:58:17.641Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2025-07-15T12:58:17.649Z [INFO]: ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: cd frontend-demo
+2025-07-15T12:58:17.659Z [INFO]: # Executing command: npm ci
+2025-07-15T12:58:31.925Z [WARNING]: npm warn EBADENGINE Unsupported engine {
+                                    npm warn EBADENGINE   package: 'vite@7.0.4',
+                                    npm warn EBADENGINE   required: { node: '^20.19.0 || >=22.12.0' },
+                                    npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+                                    npm warn EBADENGINE }
+2025-07-15T12:58:38.548Z [INFO]: added 424 packages, and audited 425 packages in 17s
+2025-07-15T12:58:38.553Z [INFO]: 97 packages are looking for funding
+                                 run `npm fund` for details
+                                 found 0 vulnerabilities
+2025-07-15T12:58:38.567Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+2025-07-15T12:58:38.568Z [INFO]: # Executing command: npm run build
+2025-07-15T12:58:38.692Z [INFO]: > frontend-demo@0.0.0 build
+                                 > tsc -b && vite build
+2025-07-15T12:58:42.270Z [INFO]: src/__tests__/accessibility/advanced-accessibility.test.tsx(2,26): error TS6133: 'fireEvent' is declared but its value is never read.
+2025-07-15T12:58:42.274Z [INFO]: src/__tests__/components/AnalysisDashboard.test.tsx(9,3): error TS2304: Cannot find name 'beforeEach'.
+                                 src/__tests__/components/GoalCard.test.tsx(1,32): error TS6133: 'vi' is declared but its value is never read.
+                                 src/__tests__/components/LandingPage.test.tsx(9,3): error TS2304: Cannot find name 'beforeEach'.
+                                 src/__tests__/components/UploadDemo.test.tsx(10,3): error TS2304: Cannot find name 'beforeEach'.
+                                 src/__tests__/integration/App.test.tsx(2,26): error TS6133: 'fireEvent' is declared but its value is never read.
+                                 src/__tests__/services/feedminerApi.test.ts(10,1): error TS2739: Type 'Mock<Procedure>' is missing the following properties from type '{ new (url: string | URL, protocols?: string | string[] | undefined): WebSocket; prototype: WebSocket; readonly CONNECTING: 0; readonly OPEN: 1; readonly CLOSING: 2; readonly CLOSED: 3; }': CONNECTING, OPEN, CLOSING, CLOSED
+2025-07-15T12:58:42.373Z [ERROR]: !!! Build failed
+2025-07-15T12:58:42.373Z [ERROR]: !!! Error: Command failed with exit code 2
+2025-07-15T12:58:42.373Z [INFO]: # Starting environment caching...
+2025-07-15T12:58:42.373Z [INFO]: # Environment caching completed
+

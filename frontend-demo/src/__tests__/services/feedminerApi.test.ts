@@ -6,7 +6,7 @@ const mockFetch = vi.fn()
 global.fetch = mockFetch
 
 // Mock WebSocket
-const mockWebSocket = vi.fn()
+const mockWebSocket = vi.fn() as any
 global.WebSocket = mockWebSocket
 
 describe('FeedMiner API Service', () => {

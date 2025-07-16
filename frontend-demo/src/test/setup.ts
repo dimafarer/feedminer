@@ -26,28 +26,29 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 // Mock fetch for API tests
 global.fetch = vi.fn()
 
-// Mock WebSocket constants
-Object.defineProperty(global, 'WebSocket', {
-  value: vi.fn().mockImplementation(() => ({
-    readyState: 1, // WebSocket.OPEN
-    send: vi.fn(),
-    close: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    onopen: null,
-    onmessage: null,
-    onerror: null,
-    onclose: null,
-  })),
-  writable: true,
-})
+// Mock WebSocket with proper constants
+const MockWebSocket = vi.fn().mockImplementation(() => ({
+  readyState: 1, // WebSocket.OPEN
+  send: vi.fn(),
+  close: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  onopen: null,
+  onmessage: null,
+  onerror: null,
+  onclose: null,
+})) as any
 
-// Add WebSocket constants
-Object.assign(global.WebSocket, {
-  CONNECTING: 0,
-  OPEN: 1,
-  CLOSING: 2,
-  CLOSED: 3,
+// Add WebSocket constants to the mock constructor
+;(MockWebSocket as any).CONNECTING = 0
+;(MockWebSocket as any).OPEN = 1
+;(MockWebSocket as any).CLOSING = 2
+;(MockWebSocket as any).CLOSED = 3
+
+// Assign to global
+Object.defineProperty(global, 'WebSocket', {
+  value: MockWebSocket,
+  writable: true,
 })
 
 // Suppress chart dimension warnings in tests
