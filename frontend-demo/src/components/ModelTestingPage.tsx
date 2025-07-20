@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ModelProviderSelector from './ModelProviderSelector';
 import AnalysisResultsCard from './AnalysisResultsCard';
 import { useFeedMinerAPI } from '../services/feedminerApi';
-import type { ModelProvider, AnalysisResponse, ComparisonResponse } from '../services/feedminerApi';
+import type { ModelProvider, AnalysisResponse, ComparisonResponse, ContentItem } from '../services/feedminerApi';
 
 interface ModelTestingPageProps {
   onBack: () => void;
@@ -22,8 +22,35 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [comparisonResult, setComparisonResult] = useState<ComparisonResponse | null>(null);
   const [error, setError] = useState<string>('');
+  
+  // Content selection for comparison
+  const [availableContent, setAvailableContent] = useState<ContentItem[]>([]);
+  const [selectedContentId, setSelectedContentId] = useState<string>('test');
+  const [loadingContent, setLoadingContent] = useState(false);
 
   const api = useFeedMinerAPI();
+
+  // Load available content on mount
+  useEffect(() => {
+    const loadContent = async () => {
+      setLoadingContent(true);
+      try {
+        const response = await api.listContent();
+        setAvailableContent(response.items);
+        
+        // If there's content available, select the first one by default
+        if (response.items.length > 0) {
+          setSelectedContentId(response.items[0].contentId);
+        }
+      } catch (err) {
+        console.error('Failed to load content:', err);
+      } finally {
+        setLoadingContent(false);
+      }
+    };
+
+    loadContent();
+  }, [api]);
 
   const handleRunAnalysis = async () => {
     setIsLoading(true);
@@ -33,25 +60,46 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
 
     try {
       if (comparisonMode) {
-        // For comparison, we'd need actual content. For now, we'll simulate
-        // In a real app, this would use a real contentId with:
-        // const comparisonRequest = {
-        //   providers: [
-        //     { provider: 'anthropic' as const, model: 'claude-3-5-sonnet-20241022', temperature: selectedProvider.temperature },
-        //     { provider: 'bedrock' as const, model: 'anthropic.claude-3-5-sonnet-20241022-v2:0', temperature: selectedProvider.temperature },
-        //   ],
-        // };
-        setError('Comparison mode requires uploaded content. Please upload content first or use single provider mode.');
-        return;
+        // Run comparison analysis with both providers
+        if (selectedContentId === 'test') {
+          setError('Comparison mode requires uploaded content. Please upload content first or select uploaded content.');
+          return;
+        }
+
+        const comparisonRequest = {
+          providers: [
+            {
+              provider: 'anthropic' as const,
+              model: 'claude-3-5-sonnet-20241022',
+              temperature: selectedProvider.temperature,
+            },
+            {
+              provider: 'bedrock' as const,
+              model: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+              temperature: selectedProvider.temperature,
+            },
+          ],
+        };
+
+        const response = await api.compareProviders(selectedContentId, comparisonRequest);
+        setComparisonResult(response);
       } else {
         // Run single provider analysis
-        const response = await api.analyzeWithProvider('test', {
-          provider: selectedProvider.provider,
-          model: selectedProvider.model,
-          temperature: selectedProvider.temperature,
-          prompt: testPrompt,
-        });
-        
+        const contentId = selectedContentId === 'test' ? 'test' : selectedContentId;
+        const analysisRequest = selectedContentId === 'test' 
+          ? {
+              provider: selectedProvider.provider,
+              model: selectedProvider.model,
+              temperature: selectedProvider.temperature,
+              prompt: testPrompt,
+            }
+          : {
+              provider: selectedProvider.provider,
+              model: selectedProvider.model,
+              temperature: selectedProvider.temperature,
+            };
+
+        const response = await api.analyzeWithProvider(contentId, analysisRequest);
         setAnalysisResult(response);
       }
     } catch (err) {
@@ -127,26 +175,73 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
               onToggleComparison={setComparisonMode}
             />
 
-            {/* Test Prompt */}
+            {/* Content Selector */}
             <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Test Prompt</h3>
-                <p className="text-sm text-gray-600">Enter a custom prompt to test the AI model</p>
+                <h3 className="text-lg font-semibold text-gray-900">Content Selection</h3>
+                <p className="text-sm text-gray-600">
+                  Choose content to analyze {comparisonMode ? '(required for comparison)' : '(or use test mode)'}
+                </p>
               </div>
-              
-              <textarea
-                value={testPrompt}
-                onChange={(e) => setTestPrompt(e.target.value)}
-                disabled={isLoading}
-                rows={4}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="Enter your test prompt here..."
-              />
 
+              {loadingContent ? (
+                <div className="animate-pulse">
+                  <div className="h-10 bg-gray-300 rounded"></div>
+                </div>
+              ) : (
+                <select
+                  value={selectedContentId}
+                  onChange={(e) => setSelectedContentId(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                >
+                  <option value="test">🧪 Test Mode (Custom Prompt)</option>
+                  {availableContent.map((item) => (
+                    <option key={item.contentId} value={item.contentId}>
+                      📄 {item.type} - {new Date(item.createdAt).toLocaleDateString()} 
+                      {item.status === 'processed' ? ' ✅' : ' ⏳'}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {availableContent.length === 0 && !loadingContent && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-yellow-600">⚠️</span>
+                    <span className="text-sm text-yellow-800">
+                      No uploaded content found. Upload Instagram data first or use test mode.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Test Prompt - Only show when in test mode */}
+            {selectedContentId === 'test' && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Test Prompt</h3>
+                  <p className="text-sm text-gray-600">Enter a custom prompt to test the AI model</p>
+                </div>
+              
+                <textarea
+                  value={testPrompt}
+                  onChange={(e) => setTestPrompt(e.target.value)}
+                  disabled={isLoading}
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  placeholder="Enter your test prompt here..."
+                />
+              </div>
+            )}
+
+            {/* Analysis Controls - Always show */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
               <div className="flex space-x-3">
                 <button
                   onClick={handleRunAnalysis}
-                  disabled={isLoading || !testPrompt.trim()}
+                  disabled={isLoading || (selectedContentId === 'test' && !testPrompt.trim())}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   {isLoading ? (
@@ -174,17 +269,6 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
                   </button>
                 )}
               </div>
-
-              {comparisonMode && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-yellow-600">⚠️</span>
-                    <span className="text-sm text-yellow-800">
-                      Comparison mode requires uploaded content. Upload content first or use single provider mode.
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Info Panel */}
