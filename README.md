@@ -2,9 +2,9 @@
 
 **Universal saved content processor with AI-powered analysis using Strands agents**
 
-FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides intelligent categorization, insights, and analysis using Claude AI via Amazon Bedrock. 
+FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides an interactive conversational goal-setting experience using Claude AI via Amazon Bedrock. Through deep behavioral analysis and personalized conversations, FeedMiner helps users discover and achieve meaningful goals based on their social media behavior patterns. 
 
-**✨ NEW: [Professional React Frontend Demo](./frontend-demo/)** - Portfolio-ready application showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
+**✨ LIVE: [Professional React Frontend](./frontend-demo/)** - Production-deployed application on AWS Amplify showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
 
 ## 🏗 Architecture Overview
 
@@ -18,13 +18,17 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
 - **Amazon Bedrock**: AI model access (Claude 3.7 Sonnet) for content analysis
 
 ### AI Processing Engine
-- **Strands Agents Framework**: Specialized AI agents for different content types
-- **Claude 3.7 Sonnet**: Primary AI model for content analysis and categorization
-- **Structured Output**: Pydantic models ensure consistent, validated AI responses
+- **Strands Agents Framework**: Specialized AI agents for different content types with multi-provider support
+- **Multi-Model Integration**: Claude 3.5 Sonnet via both Anthropic API and AWS Bedrock
+- **Model Provider Switching**: Runtime selection between providers for performance optimization
+- **Extensible Model Support**: Ready for additional Bedrock models (GPT-4, Titan, Llama, etc.)
+- **Structured Output**: Pydantic models ensure consistent, validated AI responses across all providers
 
 ## 🎯 Current Capabilities
 
-### ✅ Implemented Features (MVP Phase - v0.1.0)
+### ✅ Implemented Features (Foundation Phase - v0.1.x)
+
+**Note**: Currently transitioning from immediate goal recommendations to interactive conversational goal discovery system.
 
 1. **Content Upload & Storage**
    - REST API endpoint for uploading exported content
@@ -47,28 +51,33 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
    - Individual content retrieval with optional raw data
    - Job status tracking for long-running processes
 
-5. **Professional React Frontend Demo** 🎨 **NEW (v0.1.4)**
+5. **Professional React Frontend Application** 🎨 **LIVE (v0.1.4)**
+   - **Production Deployment**: Live on AWS Amplify with GitHub CI/CD integration
    - **Portfolio-Ready Application**: React 18 + TypeScript + Vite + Tailwind CSS
    - **Real Data Showcase**: Interactive visualization of 177 Instagram posts analysis
    - **Goal Recommendations**: Evidence-based 30/90/365-day plans with success probability
    - **Behavioral Insights**: Charts showing learning style, motivation cycles, and interest distribution
-   - **Live Demo Ready**: AWS Amplify deployment configuration with API integration
+   - **Full-Stack Integration**: Connected to AWS backend APIs for real-time processing
    - **Comprehensive Testing**: 94 tests covering components, services, integration, and accessibility
 
-### 🔄 In Active Development (July 14-16)
+### ✅ Latest Implementation (July 20 - v0.2.0)
 
-1. **AI Integration Strategy**
-   - **Current**: Anthropic API direct integration for rapid prototyping
-   - **This Week**: Bedrock integration for model comparison and flexibility
-   - **Goal**: Multi-provider setup leveraging Strands' model-swapping capabilities
-   - **Timeline**: Model performance comparison by July 18
+1. **Multi-Model AI Integration** 🤖
+   - **Anthropic Direct**: Original implementation for rapid prototyping and development
+   - **AWS Bedrock**: Production-ready Claude 3.5 Sonnet via Bedrock for enterprise deployment
+   - **Model Switching**: Runtime provider selection between Anthropic and Bedrock
+   - **Performance Comparison**: Built-in latency, cost, and quality benchmarking
+   - **Extensible Architecture**: Ready for additional Bedrock models (GPT-4, Titan, etc.)
+   - **Frontend Integration**: User interface for real-time model provider selection
 
-2. **Instagram Goal-Oriented Analysis** 🎯
-   - **Real Data Processing**: Successfully tested with 177 actual Instagram saves
-   - **Goal Area Identification**: Fitness (38.2%), Learning (20.6%), Business, Creative, Technology
-   - **Behavioral Pattern Discovery**: Content preferences, saving habits, temporal patterns
-   - **Actionable Recommendations**: Generated specific 30-day, 90-day, and 1-year goals
-   - **Interest Categorization**: Automated analysis of account types and motivational indicators
+2. **Interactive Conversational Goal Discovery** 🎯
+   - **Behavioral Analysis First**: Deep analysis of user behavior patterns before goal setting
+   - **Conversational Interface**: AI-powered dialogue to understand user intentions and aspirations
+   - **Individual Post Deep-Dive**: Detailed analysis of specific saved posts for evidence-based insights
+   - **Co-Creative Goal Setting**: Collaborative goal formulation through guided conversation
+   - **Iterative Refinement**: Continuous conversation to refine and adjust goals based on user feedback
+   - **Evidence-Based Recommendations**: Goals grounded in actual user behavior and specific content
+   - **Action Plan Development**: Specific, measurable steps derived from user's content patterns
 
 ### 🔧 Technical Implementation Details
 
@@ -850,9 +859,18 @@ npm run test
 npm run test:coverage
 ```
 
+### 🚀 Live Deployment (AWS Amplify)
+
+**Production Frontend**: Successfully deployed via AWS Amplify with GitHub integration
+
+- **Deployment**: Automated builds from GitHub repository
+- **CI/CD**: Continuous deployment on push to main branch
+- **Integration**: Connected to backend AWS APIs for real-time data processing
+- **Status**: ✅ Production-ready with real Instagram data analysis capabilities
+
 ---
 
 **Generated with Claude Code** 🤖  
 Last Updated: July 14, 2025  
 Version: 0.1.4 (Tested Frontend)  
-**System Status**: 🚀 Production-Ready Full-Stack Application - Backend + Frontend + Comprehensive Testing
+**System Status**: 🚀 Live Production Full-Stack Application - AWS Backend + Amplify Frontend + Real Instagram Data Processing

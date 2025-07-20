@@ -1,8 +1,8 @@
 # FeedMiner API Documentation
 
-**Version**: 0.1.0 (MVP)  
-**Status**: Infrastructure Complete - Real Data Testing This Week  
-**AI Integration**: Anthropic API (current) + Bedrock (July 16)
+**Version**: 0.2.0 (Multi-Model AI Integration)  
+**Status**: Production Ready - Multi-Provider AI Support  
+**AI Integration**: Anthropic API + AWS Bedrock with runtime switching
 
 ## REST API Endpoints
 
@@ -93,7 +93,7 @@ Upload saved content for processing and analysis.
 }
 ```
 
-**Note**: Analysis field will be populated once AI processing is implemented (July 16).
+**Note**: Analysis field contains results from selected AI provider (Anthropic API or AWS Bedrock).
 
 ### Job Status
 **GET** `/jobs/{jobId}`
@@ -143,16 +143,17 @@ wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev
 - Content listing with pagination
 - Individual content retrieval
 - WebSocket connection management
-
-### 🔄 In Development (July 14-16)
-- Real Instagram data processing and validation
-- Bedrock AI integration and model comparison
-- Advanced error handling and retry logic
-
-### 📋 Coming Soon (July 16+)
+- Multi-provider AI processing (Anthropic + Bedrock)
+- Real-time model provider switching
 - AI-powered content analysis responses
-- Category detection and insights
+- Category detection and behavioral insights
 - Streaming analysis via WebSocket
+
+### 🆕 New in v0.2.0 (Multi-Model AI Integration)
+- **Model Provider Selection**: Choose between Anthropic API and AWS Bedrock at runtime
+- **Performance Benchmarking**: Built-in latency and quality comparison between providers
+- **Extensible Model Support**: Framework ready for additional Bedrock models
+- **Cost Optimization**: Provider switching for cost-effective AI processing
 
 ## Error Handling
 

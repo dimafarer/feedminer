@@ -172,13 +172,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Portfolio Quality**: Demonstrates modern testing practices for interviews
 - **Maintainable Code**: Well-structured tests serving as living documentation
 
+## [0.1.5] - 2025-07-19 - "Production Deployment Success - AWS Amplify Integration"
+
+### Added - Live Production System
+- **AWS Amplify Deployment**: Successfully deployed frontend application to production via GitHub integration
+- **CI/CD Pipeline**: Automated build and deployment from GitHub repository to Amplify hosting
+- **Production Integration**: Live connection between Amplify frontend and AWS backend APIs
+- **Real Instagram Data Processing**: Production system successfully analyzing user-uploaded Instagram export files
+- **End-to-End Functionality**: Complete workflow from user upload through AI analysis to interactive results
+
+### Production Validation
+- **Live Data Processing**: Confirmed real Instagram export files upload and analysis in production environment
+- **Full-Stack Operation**: Validated seamless integration between AWS Amplify frontend and serverless backend
+- **Real-Time Analysis**: WebSocket streaming analysis working in production with progress updates
+- **Interactive Results**: Goal recommendations and behavioral insights displaying correctly for real user data
+- **Performance Verification**: Production system handling actual workloads with expected response times
+
+### Deployment Infrastructure
+- **GitHub Integration**: Repository connected to Amplify for automatic deployments on push
+- **Production Environment**: Live application accessible to users with full functionality
+- **API Connectivity**: Frontend successfully communicating with deployed AWS Lambda functions
+- **Data Pipeline**: Complete data flow from upload through S3, DynamoDB, and AI analysis
+- **System Status**: Full-stack production application ready for real-world usage
+
+### Business Impact
+- **Production-Ready Platform**: FeedMiner now live and operational for real users
+- **Successful Demo**: Live system demonstrates complete value proposition with real data
+- **Technical Validation**: Proves serverless architecture scales and performs in production
+- **Portfolio Achievement**: Complete full-stack application from concept to production deployment
+- **User Value Delivery**: Real Instagram data successfully transformed into actionable goal recommendations
+
 ## [Unreleased] - Active Development
 
-### [0.2.0] - Planned for July 16, 2025 - "Multi-Model AI Integration"
-- **Bedrock Integration**: AWS Bedrock model access and comparison
-- **Model Performance Analysis**: Latency, cost, and quality benchmarking
-- **Real Data Testing**: Validation with actual Instagram exports
-- **Strands Model Swapping**: Demonstration of multi-provider flexibility
+### [0.2.0] - July 20, 2025 - "Multi-Model AI Integration"
+- **AWS Bedrock Integration**: Complete Claude 3.5 Sonnet access via Bedrock alongside existing Anthropic API
+- **Model Provider Switching**: Runtime selection between Anthropic Direct and AWS Bedrock providers
+- **Multi-Model Support**: Foundation for additional Bedrock models (GPT-4, Titan, etc.)
+- **Performance Comparison**: Latency, cost, and quality benchmarking between providers
+- **Frontend Model Selection**: User interface for real-time model provider switching
+- **Strands Framework Enhancement**: Demonstration of seamless multi-provider flexibility
 
 ### [0.3.0] - Planned for July 19+ - "Advanced Pattern Discovery"
 - **Content Analysis**: Category detection with confidence scoring

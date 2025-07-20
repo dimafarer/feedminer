@@ -1,7 +1,7 @@
 # FeedMiner Deployment Guide
 
-**Version**: 0.1.0 (MVP)  
-**Status**: Infrastructure Complete - Bedrock Integration This Week (July 16)
+**Version**: 0.2.0 (Multi-Model AI Integration)  
+**Status**: Production Ready - Multi-Provider AI Support
 
 ## Prerequisites
 
@@ -20,11 +20,14 @@ source feedminer-env/bin/activate
 
 ### 2. Deploy to AWS
 ```bash
-# Current: With Anthropic API key (for rapid prototyping)
+# Option 1: Anthropic API + Bedrock (recommended for full feature access)
 ./scripts/deploy.sh dev sk-ant-your-key-here
 
-# Coming July 16: With Bedrock (for model comparison)
-./scripts/deploy.sh dev
+# Option 2: Bedrock only (enterprise deployment)
+./scripts/deploy.sh dev BEDROCK_ONLY
+
+# Option 3: Anthropic only (development/testing)
+./scripts/deploy.sh dev sk-ant-your-key-here --disable-bedrock
 ```
 
 ### 3. Test Deployment
