@@ -15,6 +15,30 @@ Parameters:
     NoEcho: true
     Description: Anthropic API key for Claude integration
   
+  # Multi-Model AI Integration Parameters (v0.2.0)
+  PrimaryAIProvider:
+    Type: String
+    Default: "anthropic"
+    AllowedValues: ["anthropic", "bedrock"]
+    Description: Primary AI provider for content analysis
+  
+  FallbackAIProvider:
+    Type: String
+    Default: "bedrock"
+    AllowedValues: ["anthropic", "bedrock", "none"]
+    Description: Fallback AI provider if primary fails
+  
+  PreferredAIModel:
+    Type: String
+    Default: ""
+    Description: Preferred AI model (optional, uses provider default if empty)
+  
+  EnableModelComparison:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable multi-provider comparison mode for analysis
+  
   AllowedOrigins:
     Type: CommaDelimitedList
     Default: "http://localhost:3000,https://localhost:3000"
@@ -99,7 +123,7 @@ Parameters:
   # Cost Tagging Parameters - Version and Deployment
   ApplicationVersion:
     Type: String
-    Default: "0.1.0"
+    Default: "0.2.0"
     Description: Application version for release tracking
     
   DeploymentActor:
@@ -140,6 +164,11 @@ Globals:
           - !Sub "${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
           - "DISABLED"
         DYNAMODB_TABLE_PREFIX: !Sub "${AWS::StackName}-${Environment}"
+        # Multi-Model AI Configuration (v0.2.0)
+        PRIMARY_AI_PROVIDER: !Ref PrimaryAIProvider
+        FALLBACK_AI_PROVIDER: !Ref FallbackAIProvider
+        PREFERRED_AI_MODEL: !Ref PreferredAIModel
+        ENABLE_MODEL_COMPARISON: !Ref EnableModelComparison
     Tracing: Active
     Architectures:
       - arm64
@@ -575,6 +604,22 @@ Resources:
     DependsOn:
       - ContentAnalysisAgentS3Permission
 
+  # Lambda Layers for AI Dependencies (v0.2.0)
+  AIProvidersLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${AWS::StackName}-ai-providers-${Environment}"
+      Description: "AI providers dependencies for multi-model support (Anthropic, Bedrock)"
+      ContentUri: layers/ai-providers/
+      CompatibleRuntimes:
+        - python3.12
+      CompatibleArchitectures:
+        - arm64
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.12
+      BuildArchitecture: arm64
+
   # WebSocket Lambda functions
   WebSocketConnectFunction:
     Type: AWS::Serverless::Function
@@ -878,6 +923,63 @@ Resources:
             Path: /jobs/{jobId}
             Method: GET
 
+  # Model Switching and Comparison API (v0.2.0)
+  ModelSwitchingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-model-switching-${Environment}"
+      CodeUri: src/api/
+      Handler: model_switching.handler
+      Timeout: 300  # 5 minutes for AI comparison
+      MemorySize: 1024
+      Layers:
+        - !Ref AIProvidersLayer
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContentTable
+        - S3ReadPolicy:
+            BucketName: !Ref ContentBucket
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+            Resource: "*"
+      Events:
+        AnalyzeWithProviderApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /analyze/{contentId}
+            Method: POST
+        CompareProvidersApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /compare/{contentId}
+            Method: POST
+
+  # Debug Layer Function (temporary)
+  DebugLayerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-debug-layer-${Environment}"
+      CodeUri: src/api/
+      Handler: debug_layer.handler
+      Layers:
+        - !Ref AIProvidersLayer
+      Events:
+        DebugApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /debug
+            Method: GET
+
   # S3 Lambda Permission for Content Analysis
   ContentAnalysisAgentS3Permission:
     Type: AWS::Lambda::Permission
@@ -886,6 +988,49 @@ Resources:
       FunctionName: !Ref ContentAnalysisAgent
       Principal: s3.amazonaws.com
       SourceArn: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}"
+
+  # Enhanced Instagram Parser with Multi-Model AI Support (v0.2.0)
+  EnhancedInstagramParserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-enhanced-instagram-parser-${Environment}"
+      CodeUri: src/agents/
+      Handler: instagram_parser_v2.handler
+      Timeout: 300  # 5 minutes for AI processing
+      MemorySize: 1024  # More memory for AI processing
+      Layers:
+        - !Ref AIProvidersLayer
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          JOBS_TABLE: !Ref JobsTable
+          CONTENT_BUCKET: !Ref ContentBucket
+          # AI Provider Configuration
+          PREFERRED_AI_PROVIDER: !Ref PrimaryAIProvider
+          PREFERRED_AI_MODEL: !Ref PreferredAIModel
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - S3ReadPolicy:
+            BucketName: !Ref ContentBucket
+        - S3WritePolicy:
+            BucketName: !Ref ContentBucket
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+            Resource: "*"
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
 
   # Processing orchestrator
   ProcessingOrchestratorFunction:

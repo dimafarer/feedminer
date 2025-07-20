@@ -155,6 +155,93 @@ wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev
 - **Extensible Model Support**: Framework ready for additional Bedrock models
 - **Cost Optimization**: Provider switching for cost-effective AI processing
 
+### Analyze with Specific Provider
+**POST** `/analyze/{contentId}`
+
+Analyze content using a specific AI provider and model.
+
+**Request Body:**
+```json
+{
+  "provider": "bedrock",
+  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "temperature": 0.7
+}
+```
+
+**Test Mode** (for contentId = "test"):
+```json
+{
+  "provider": "bedrock",
+  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "prompt": "Custom test prompt"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "contentId": "12345",
+  "provider": "bedrock",
+  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "response": {
+    "content": "AI analysis result...",
+    "provider": "bedrock",
+    "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "latency_ms": 1037,
+    "usage": {
+      "input_tokens": 150,
+      "output_tokens": 45,
+      "total_tokens": 195
+    },
+    "success": true
+  },
+  "timestamp": "2025-07-20T20:31:17.334241"
+}
+```
+
+### Compare Providers
+**POST** `/compare/{contentId}`
+
+Compare analysis results across multiple AI providers.
+
+**Request Body:**
+```json
+{
+  "providers": [
+    {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022"
+    },
+    {
+      "provider": "bedrock", 
+      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "contentId": "12345",
+  "comparison": {
+    "providers": ["anthropic", "bedrock"],
+    "results": {
+      "anthropic": { "content": "...", "latency_ms": 950 },
+      "bedrock": { "content": "...", "latency_ms": 1037 }
+    },
+    "summary": {
+      "fastest_provider": "anthropic",
+      "most_cost_effective": "bedrock",
+      "quality_comparison": {...}
+    }
+  }
+}
+```
+
 ## Error Handling
 
 All endpoints return consistent error responses:

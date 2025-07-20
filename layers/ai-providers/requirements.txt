@@ -1,0 +1,10 @@
+# AI Provider Dependencies for Lambda Layer
+# These packages are needed for multi-model AI integration
+
+# Core AI providers
+anthropic>=0.7.0
+pydantic>=2.5.0
+
+# Additional dependencies for data processing
+python-dateutil>=2.8.0
+orjson>=3.9.0

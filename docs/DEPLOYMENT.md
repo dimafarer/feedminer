@@ -9,6 +9,10 @@
 2. **SAM CLI** installed
 3. **Python 3.12+** with virtual environment
 4. **Anthropic API key** OR **AWS Bedrock access**
+5. **AWS Bedrock Model Access** (if using Bedrock):
+   - Navigate to AWS Bedrock Console in your deployment region
+   - Request access to: `anthropic.claude-3-5-sonnet-20241022-v2:0`
+   - Wait for approval (usually immediate for standard models)
 
 ## Quick Deployment
 
