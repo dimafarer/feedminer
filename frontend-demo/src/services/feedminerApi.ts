@@ -32,6 +32,63 @@ export interface JobStatus {
   result?: any;
 }
 
+// v0.2.0 Multi-Model AI Integration Types
+export interface ModelProvider {
+  provider: 'anthropic' | 'bedrock';
+  model: string;
+  temperature?: number;
+}
+
+export interface AnalysisRequest {
+  provider: 'anthropic' | 'bedrock';
+  model: string;
+  temperature?: number;
+  prompt?: string; // For test mode
+}
+
+export interface AnalysisResponse {
+  success: boolean;
+  contentId: string;
+  provider: string;
+  model: string;
+  response: {
+    content: string;
+    provider: string;
+    model: string;
+    latency_ms: number;
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+      total_tokens: number;
+    };
+    success: boolean;
+  };
+  timestamp: string;
+  test_mode?: boolean;
+}
+
+export interface ComparisonRequest {
+  providers: ModelProvider[];
+}
+
+export interface ComparisonResponse {
+  success: boolean;
+  contentId: string;
+  comparison: {
+    providers: string[];
+    results: Record<string, {
+      content: string;
+      latency_ms: number;
+      usage: any;
+    }>;
+    summary: {
+      fastest_provider: string;
+      most_cost_effective: string;
+      quality_comparison: any;
+    };
+  };
+}
+
 class FeedMinerAPI {
   private baseUrl: string;
   private websocketUrl: string;
@@ -182,6 +239,62 @@ class FeedMinerAPI {
       console.error('WebSocket not open. Ready state:', ws.readyState);
     }
   }
+
+  // v0.2.0 Multi-Model AI Integration Methods
+  
+  // Analyze content with specific provider
+  async analyzeWithProvider(contentId: string, request: AnalysisRequest): Promise<AnalysisResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/analyze/${contentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Analysis error:', error);
+      throw error;
+    }
+  }
+
+  // Compare multiple providers
+  async compareProviders(contentId: string, request: ComparisonRequest): Promise<ComparisonResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/compare/${contentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Comparison failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Comparison error:', error);
+      throw error;
+    }
+  }
+
+  // Test Bedrock integration (uses special "test" contentId)
+  async testBedrockIntegration(prompt?: string): Promise<AnalysisResponse> {
+    return this.analyzeWithProvider('test', {
+      provider: 'bedrock',
+      model: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+      temperature: 0.7,
+      prompt: prompt || 'Hello! This is a test of Bedrock integration. Please respond with "Bedrock integration successful!"'
+    });
+  }
 }
 
 // Create singleton instance
@@ -196,6 +309,10 @@ export const useFeedMinerAPI = () => {
     getJobStatus: feedminerApi.getJobStatus.bind(feedminerApi),
     createWebSocketConnection: feedminerApi.createWebSocketConnection.bind(feedminerApi),
     sendWebSocketMessage: feedminerApi.sendWebSocketMessage.bind(feedminerApi),
+    // v0.2.0 Multi-Model AI Integration
+    analyzeWithProvider: feedminerApi.analyzeWithProvider.bind(feedminerApi),
+    compareProviders: feedminerApi.compareProviders.bind(feedminerApi),
+    testBedrockIntegration: feedminerApi.testBedrockIntegration.bind(feedminerApi),
   };
 };
 

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import LandingPage from './components/LandingPage';
 import UploadDemo from './components/UploadDemo';
 import AnalysisDashboard from './components/AnalysisDashboard';
+import ModelTestingPage from './components/ModelTestingPage';
 import { realAnalysisResults } from './data/analysisResults';
 
-type AppState = 'landing' | 'upload' | 'processing' | 'results';
+type AppState = 'landing' | 'upload' | 'processing' | 'results' | 'model-testing';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppState>('landing');
@@ -29,12 +30,17 @@ function App() {
     setCurrentView('landing');
   };
 
+  const handleModelTesting = () => {
+    setCurrentView('model-testing');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {currentView === 'landing' && (
         <LandingPage 
           onStartDemo={handleStartDemo}
           onViewDemo={handleViewDemo}
+          onModelTesting={handleModelTesting}
         />
       )}
       
@@ -65,6 +71,12 @@ function App() {
       {currentView === 'results' && (
         <AnalysisDashboard 
           results={realAnalysisResults}
+          onBack={handleBackToLanding}
+        />
+      )}
+      
+      {currentView === 'model-testing' && (
+        <ModelTestingPage 
           onBack={handleBackToLanding}
         />
       )}

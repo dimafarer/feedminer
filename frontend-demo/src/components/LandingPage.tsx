@@ -3,9 +3,10 @@ import React from 'react';
 interface LandingPageProps {
   onStartDemo: () => void;
   onViewDemo: () => void;
+  onModelTesting?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStartDemo, onViewDemo }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStartDemo, onViewDemo, onModelTesting }) => {
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -19,6 +20,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartDemo, onViewDemo }) =>
               <h1 className="text-2xl font-bold text-gray-900">FeedMiner</h1>
             </div>
             <div className="flex items-center space-x-4">
+              {onModelTesting && (
+                <button 
+                  onClick={onModelTesting}
+                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                >
+                  <span>🤖</span>
+                  <span>AI Models</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">v0.2.0</span>
+                </button>
+              )}
               <button 
                 onClick={onViewDemo}
                 className="text-gray-600 hover:text-gray-900 font-medium"
