@@ -35,22 +35,26 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
     const loadContent = async () => {
       setLoadingContent(true);
       try {
+        console.log('Loading content list...');
         const response = await api.listContent();
-        setAvailableContent(response.items);
+        console.log('Content loaded:', response);
+        setAvailableContent(response.items || []);
         
         // If there's content available, select the first one by default
-        if (response.items.length > 0) {
+        if (response.items && response.items.length > 0) {
           setSelectedContentId(response.items[0].contentId);
+          console.log('Selected content:', response.items[0].contentId);
         }
       } catch (err) {
         console.error('Failed to load content:', err);
+        setAvailableContent([]); // Set empty array on error
       } finally {
         setLoadingContent(false);
       }
     };
 
     loadContent();
-  }, [api]);
+  }, []); // Empty dependency array - only run on mount
 
   const handleRunAnalysis = async () => {
     setIsLoading(true);
