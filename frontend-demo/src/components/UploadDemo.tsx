@@ -48,9 +48,19 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
         // Use sample data
         contentToUpload = sampleInstagramData;
       } else if (uploadedFile) {
-        // Read actual file content
+        // Check if it's a ZIP file
+        if (uploadedFile.type === 'application/zip' || uploadedFile.name.endsWith('.zip')) {
+          throw new Error('ZIP file upload not yet implemented. Please extract the ZIP file and upload the JSON file inside (usually in a folder like "saved_saved_media.json")');
+        }
+        
+        // Read actual file content as JSON
         const fileContent = await uploadedFile.text();
-        contentToUpload = JSON.parse(fileContent);
+        
+        try {
+          contentToUpload = JSON.parse(fileContent);
+        } catch (parseError) {
+          throw new Error('Invalid JSON file. Please upload a valid Instagram export JSON file.');
+        }
       } else {
         throw new Error('No file selected');
       }
