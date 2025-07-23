@@ -28,15 +28,15 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
   const [selectedContentId, setSelectedContentId] = useState<string>('test');
   const [loadingContent, setLoadingContent] = useState(false);
 
-  const api = useFeedMinerAPI();
-
   // Load available content on mount
   useEffect(() => {
     const loadContent = async () => {
       setLoadingContent(true);
       try {
         console.log('Loading content list...');
-        const response = await api.listContent();
+        // Import the API directly to avoid hook re-render issues
+        const { feedminerApi } = await import('../services/feedminerApi');
+        const response = await feedminerApi.listContent();
         console.log('Content loaded:', response);
         setAvailableContent(response.items || []);
         
@@ -55,6 +55,8 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
 
     loadContent();
   }, []); // Empty dependency array - only run on mount
+
+  const api = useFeedMinerAPI();
 
   const handleRunAnalysis = async () => {
     setIsLoading(true);

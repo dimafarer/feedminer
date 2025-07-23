@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { sampleInstagramData } from '../data/analysisResults';
+import { useFeedMinerAPI } from '../services/feedminerApi';
 
 interface UploadDemoProps {
   onUploadComplete: () => void;
@@ -11,6 +12,8 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'upload' | 'preview' | 'confirm'>('upload');
+
+  const api = useFeedMinerAPI();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -34,14 +37,41 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
     setUploadedFile(new File([JSON.stringify(sampleInstagramData, null, 2)], 'sample-instagram-data.json', { type: 'application/json' }));
   };
 
-  const handleConfirmUpload = () => {
+  const handleConfirmUpload = async () => {
     setIsProcessing(true);
     setStep('confirm');
     
-    // Simulate API upload
-    setTimeout(() => {
+    try {
+      let contentToUpload;
+      
+      if (uploadedFile && uploadedFile.name.includes('sample')) {
+        // Use sample data
+        contentToUpload = sampleInstagramData;
+      } else if (uploadedFile) {
+        // Read actual file content
+        const fileContent = await uploadedFile.text();
+        contentToUpload = JSON.parse(fileContent);
+      } else {
+        throw new Error('No file selected');
+      }
+
+      console.log('Uploading content to backend...', { type: 'instagram_saved', size: JSON.stringify(contentToUpload).length });
+      
+      const response = await api.uploadContent(
+        contentToUpload, 
+        'instagram_saved', 
+        'demo-user'
+      );
+      
+      console.log('Upload successful:', response);
       onUploadComplete();
-    }, 2000);
+      
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      setIsProcessing(false);
+      setStep('preview'); // Go back to preview to allow retry
+    }
   };
 
   const handleStartOver = () => {
