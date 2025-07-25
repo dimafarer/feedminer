@@ -212,11 +212,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Frontend Model Selection**: User interface for real-time model provider switching
 - **Strands Framework Enhancement**: Demonstration of seamless multi-provider flexibility
 
-### [0.3.0] - Planned for July 19+ - "Advanced Pattern Discovery"
-- **Content Analysis**: Category detection with confidence scoring
-- **Behavioral Insights**: User preference and engagement pattern analysis
-- **Cross-Content Correlation**: Pattern discovery across saved content
-- **Performance Optimization**: Based on real usage data
+### [0.3.0] - Planned for July 25+ - "Enhanced Instagram Data Support"
+- **Multi-File Instagram Processing**: Complete Instagram export ZIP file support
+- **Hierarchical Data Analysis**: Saved posts, likes, comments, and user content correlation
+- **Advanced Storage Architecture**: S3 hierarchical organization for complex Instagram exports
+- **Comprehensive Behavioral Analysis**: Cross-activity pattern discovery and temporal insights
+- **Enhanced AI Analysis**: Multi-source Instagram intelligence for deeper goal recommendations
+- **See Documentation**: [Multi-File Instagram Data Processing Plan](docs/MULTI_FILE_INSTAGRAM_DATA.md)
 
 ### Future Phases
 - **Platform Expansion**: Twitter/X, Reddit, and other social platforms
