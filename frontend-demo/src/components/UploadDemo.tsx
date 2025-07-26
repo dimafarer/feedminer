@@ -5,7 +5,7 @@ import { sampleInstagramData } from '../data/analysisResults';
 import { useFeedMinerAPI } from '../services/feedminerApi';
 
 interface UploadDemoProps {
-  onUploadComplete: () => void;
+  onUploadComplete: (contentId?: string) => void;
   onBack: () => void;
 }
 
@@ -42,8 +42,9 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
     const zip = await JSZip.loadAsync(file);
     const files = Object.keys(zip.files);
     
-    // Look for Instagram export folder pattern
-    const instagramFolderPattern = /instagram-[^/]+-\d{4}-\d{2}-\d{2}-[^/]+\//;
+    // Look for Instagram export folder pattern (can be nested under meta-* folder)
+    // Pattern matches: meta-*/instagram-username-YYYY-MM-DD-hash/ or instagram-username-YYYY-MM-DD-hash/
+    const instagramFolderPattern = /(?:meta-[^/]+\/)?instagram-[^/]+-\d{4}-\d{2}-\d{2}-[^/]+\//;
     let exportFolder = '';
     
     for (const filePath of files) {
@@ -245,33 +246,26 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
             throw new Error('This ZIP file does not appear to be a valid Instagram export.');
           }
           
-          // Extract selected data types from ZIP
-          if (selectedDataTypes.length === 1) {
-            // Single data type - extract directly
-            contentToUpload = await extractDataFromZip(uploadedFile, selectedDataTypes[0]);
-            uploadType = `instagram_${selectedDataTypes[0]}`;
-          } else {
-            // Multiple data types - create consolidated structure
-            const consolidatedData: any = {
-              exportInfo: {
-                dataTypes: selectedDataTypes,
-                extractedAt: new Date().toISOString(),
-                exportFolder: zipAnalysis.exportFolder
-              }
-            };
-            
-            for (const dataTypeId of selectedDataTypes) {
-              try {
-                const data = await extractDataFromZip(uploadedFile, dataTypeId);
-                consolidatedData[dataTypeId] = data;
-              } catch (error) {
-                console.warn(`Failed to extract ${dataTypeId}:`, error);
-              }
+          // Extract selected data types from ZIP - always use consolidated structure for ZIP files
+          const consolidatedData: any = {
+            exportInfo: {
+              dataTypes: selectedDataTypes,
+              extractedAt: new Date().toISOString(),
+              exportFolder: zipAnalysis.exportFolder
             }
-            
-            contentToUpload = consolidatedData;
-            uploadType = 'instagram_export';
+          };
+          
+          for (const dataTypeId of selectedDataTypes) {
+            try {
+              const data = await extractDataFromZip(uploadedFile, dataTypeId);
+              consolidatedData[dataTypeId] = data;
+            } catch (error) {
+              console.warn(`Failed to extract ${dataTypeId}:`, error);
+            }
           }
+          
+          contentToUpload = consolidatedData;
+          uploadType = 'instagram_export';
         } else {
           // Regular JSON file
           const fileContent = await uploadedFile.text();
@@ -299,7 +293,7 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
       );
       
       console.log('Upload successful:', response);
-      onUploadComplete();
+      onUploadComplete(response.contentId);
       
     } catch (err) {
       console.error('Upload failed:', err);

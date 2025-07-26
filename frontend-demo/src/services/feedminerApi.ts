@@ -101,16 +101,40 @@ class FeedMinerAPI {
   // Upload content for analysis
   async uploadContent(content: any, type: string = 'instagram_saved', userId: string = 'demo-user'): Promise<UploadResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/upload`, {
+      // Determine which endpoint to use based on content type
+      const isMultiFileUpload = type === 'instagram_export' || (content.exportInfo && content.exportInfo.dataTypes);
+      const endpoint = isMultiFileUpload ? '/multi-upload' : '/upload';
+      
+      // Prepare request body
+      let requestBody: any = {
+        type,
+        user_id: userId,
+      };
+      
+      if (isMultiFileUpload) {
+        // For multi-file uploads, include dataTypes and spread content
+        requestBody = {
+          ...requestBody,
+          ...content,  // This includes exportInfo and individual data types
+          dataTypes: content.exportInfo?.dataTypes || ['saved_posts']
+        };
+      } else {
+        // For regular uploads, wrap content
+        requestBody.content = content;
+      }
+
+      console.log(`Using ${endpoint} for upload type: ${type}`, { 
+        isMultiFileUpload, 
+        dataTypes: requestBody.dataTypes,
+        hasExportInfo: !!content.exportInfo 
+      });
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type,
-          user_id: userId,
-          content,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

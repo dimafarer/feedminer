@@ -34,6 +34,11 @@ export interface AnalysisResult {
     percentage: number;
     goalPotential: 'High' | 'Medium' | 'Low';
   }[];
+  metadata?: {
+    dataTypesAnalyzed: string[];
+    analysisType: string;
+    backendAnalysis: any;
+  };
 }
 
 // Real data from our successful analysis

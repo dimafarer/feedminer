@@ -146,7 +146,7 @@ describe('UploadDemo', () => {
   // Helper function to create a mock Instagram ZIP file
   const createMockInstagramZip = async (dataTypes: Record<string, any> = {}) => {
     const zip = new JSZip()
-    const basePath = 'instagram-testuser-2025-07-25-abc123/'
+    const basePath = 'meta-2025-Jul-25-12-00-00/instagram-testuser-2025-07-25-abc123/'
     
     // Add default saved posts if not specified
     if (!dataTypes.saved_posts) {
@@ -200,8 +200,6 @@ describe('UploadDemo', () => {
         liked_posts: { likes_media_likes: Array(100).fill(null).map((_, i) => ({ title: `user${i}` })) }
       })
 
-      const dropzone = screen.getByText(/Drag & drop your Instagram export file here/i).closest('div')
-      
       // Simulate file drop
       const fileInput = screen.getByRole('presentation').querySelector('input[type="file"]') as HTMLInputElement
       await user.upload(fileInput, zipFile)
