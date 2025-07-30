@@ -1,7 +1,8 @@
 # AI Provider Dependencies for Lambda Layer
 # These packages are needed for multi-model AI integration
 
-# Core AI providers
+# Core AI providers and agents framework
+strands-agents[bedrock]>=0.1.0
 anthropic>=0.7.0
 pydantic>=2.5.0
 

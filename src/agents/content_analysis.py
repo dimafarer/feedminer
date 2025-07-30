@@ -36,12 +36,25 @@ def handler(event, context):
             
             print(f"Processing S3 object: s3://{bucket}/{key}")
             
+            # Skip individual data type files - only process main consolidated files
+            if '/' in key and key.count('/') > 1:
+                # This is a nested file like uploads/content-id/saved_posts.json
+                filename = key.split('/')[-1]
+                if filename in ['saved_posts.json', 'liked_posts.json', 'comments.json', 'user_posts.json', 'following.json']:
+                    print(f"Skipping individual data type file: {filename}")
+                    continue
+            
             # Download and analyze content
             response = s3.get_object(Bucket=bucket, Key=key)
             content_data = json.loads(response['Body'].read())
             
             # Extract content ID from S3 key
-            content_id = key.split('/')[-1].replace('.json', '')
+            if '/' in key and key.count('/') > 1:
+                # For nested files like uploads/content-id/consolidated.json
+                content_id = key.split('/')[-2]
+            else:
+                # For direct files like uploads/content-id.json
+                content_id = key.split('/')[-1].replace('.json', '')
             
             # Determine content type and route to appropriate agent
             content_type = content_data.get('type', 'unknown')
@@ -60,7 +73,7 @@ def handler(event, context):
             
             # Route to specialized agent based on content type
             if content_type == 'instagram_saved':
-                # Invoke Instagram parser agent
+                # Single Instagram data type - use existing parser
                 payload = {
                     'content_id': content_id,
                     'bucket': bucket,
@@ -74,9 +87,60 @@ def handler(event, context):
                 
                 agent = InstagramParserAgent()
                 analysis = asyncio.run(agent.parse_instagram_export(content_data))
-                await agent.save_analysis_result(content_id, analysis)
+                asyncio.run(agent.save_analysis_result(content_id, analysis))
                 
-                print(f"Instagram content analyzed for {content_id}")
+                print(f"Instagram content analyzed for {content_id} successfully")
+            
+            elif content_type == 'instagram_export':
+                # Multi-data-type Instagram export - handle consolidated structure
+                print(f"Processing multi-data-type Instagram export for {content_id}")
+                
+                # Check if this is the consolidated file or individual data type
+                if 'exportInfo' in content_data and 'dataTypes' in content_data['exportInfo']:
+                    # This is a consolidated multi-data-type export
+                    export_info = content_data['exportInfo']
+                    data_types = export_info['dataTypes']
+                    
+                    print(f"Found consolidated export with data types: {data_types}")
+                    
+                    # Process each data type and create a combined analysis
+                    from instagram_parser import InstagramParserAgent
+                    import asyncio
+                    
+                    agent = InstagramParserAgent()
+                    
+                    # Combine all data types into a single structure for analysis
+                    combined_content = {'combined_data': {}}
+                    total_items = 0
+                    
+                    for data_type in data_types:
+                        if data_type in content_data:
+                            combined_content['combined_data'][data_type] = content_data[data_type]
+                            
+                            # Count items for logging
+                            if data_type == 'saved_posts' and 'saved_saved_media' in content_data[data_type]:
+                                total_items += len(content_data[data_type]['saved_saved_media'])
+                            elif data_type == 'liked_posts' and 'likes_media_likes' in content_data[data_type]:
+                                total_items += len(content_data[data_type]['likes_media_likes'])
+                            # Add other data type counting as needed
+                    
+                    print(f"Processing {total_items} total items across {len(data_types)} data types")
+                    
+                    # Analyze the combined dataset
+                    analysis = asyncio.run(agent.parse_multi_type_instagram_export(combined_content, export_info))
+                    asyncio.run(agent.save_analysis_result(content_id, analysis))
+                    
+                    print(f"Multi-type Instagram export analyzed for {content_id}")
+                else:
+                    # Individual data type from a ZIP export
+                    from instagram_parser import InstagramParserAgent
+                    import asyncio
+                    
+                    agent = InstagramParserAgent()
+                    analysis = asyncio.run(agent.parse_instagram_export(content_data))
+                    asyncio.run(agent.save_analysis_result(content_id, analysis))
+                    
+                    print(f"Individual Instagram data type analyzed for {content_id}")
             
             else:
                 print(f"Unknown content type: {content_type}")
@@ -89,11 +153,12 @@ def handler(event, context):
                 )
     
     except Exception as e:
-        print(f"Error in content analysis: {e}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+        print(f"🚨🚨🚨 CRITICAL CONTENT ANALYSIS ERROR: {e}")
+        print(f"🚨 ERROR TYPE: {type(e).__name__}")
+        print(f"🚨 ERROR DETAILS: {str(e)}")
+        
+        # Re-raise the error to make it visible and stop processing
+        raise Exception(f"🚨 DEVELOPMENT MODE - CONTENT ANALYSIS FAILED: {str(e)}") from e
     
     return {
         'statusCode': 200,

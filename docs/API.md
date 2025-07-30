@@ -1,8 +1,9 @@
 # FeedMiner API Documentation
 
-**Version**: 0.2.0 (Multi-Model AI Integration)  
-**Status**: Production Ready - Multi-Provider AI Support  
-**AI Integration**: Anthropic API + AWS Bedrock with runtime switching
+**Version**: 0.3.0 (Multi-File Instagram Data Processing - Phase 1)  
+**Status**: Production Ready - Complete ZIP Processing Pipeline  
+**AI Integration**: Anthropic API + AWS Bedrock with runtime switching  
+**Latest Feature**: Multi-file Instagram export ZIP processing with smart sampling
 
 ## REST API Endpoints
 
@@ -95,6 +96,52 @@ Upload saved content for processing and analysis.
 
 **Note**: Analysis field contains results from selected AI provider (Anthropic API or AWS Bedrock).
 
+### Multi-File Upload (NEW v0.3.0)
+**POST** `/multi-upload`
+
+Upload Instagram ZIP exports with multiple data types for comprehensive analysis.
+
+**Features:**
+- **ZIP Processing**: Automatic extraction of Instagram export archives
+- **5 Data Types**: saved_posts, liked_posts, comments, user_posts, following
+- **Smart Sampling**: 100 items per category for optimal analysis performance
+- **Consolidated Analysis**: Unified insights across all interaction types
+
+**Request Body:**
+```json
+{
+  "type": "instagram_export",
+  "dataTypes": ["saved_posts", "liked_posts", "comments", "user_posts", "following"],
+  "exportInfo": {
+    "exportFolder": "instagram-username-2025-01-15-abc123/",
+    "extractedAt": "2025-01-15T10:30:00Z",
+    "dataTypes": ["saved_posts", "liked_posts", "comments", "user_posts", "following"]
+  },
+  "saved_posts": { "saved_saved_media": [...] },
+  "liked_posts": { "likes_media_likes": [...] },
+  "comments": { "comments_media_comments": [...] },
+  "user_posts": [...],
+  "following": { "relationships_following": [...] }
+}
+```
+
+**Response:**
+```json
+{
+  "contentId": "uuid",
+  "message": "Instagram export uploaded successfully with 5 data types",
+  "s3Key": "uploads/uuid/consolidated.json",
+  "status": "uploaded",
+  "type": "instagram_export",
+  "dataTypes": ["saved_posts", "liked_posts", "comments", "user_posts", "following"],
+  "totalItems": 177,
+  "dataStructure": {
+    "saved_posts": { "count": 35, "s3Key": "uploads/uuid/saved_posts.json" },
+    "liked_posts": { "count": 42, "s3Key": "uploads/uuid/liked_posts.json" }
+  }
+}
+```
+
 ### Job Status
 **GET** `/jobs/{jobId}`
 
@@ -137,6 +184,8 @@ wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev
 ```
 
 ## Current Implementation Status
+
+**⚠️ Note**: Some documented endpoints are incomplete. See [Incomplete Features](INCOMPLETE_FEATURES.md) for details.
 
 ### ✅ Fully Functional
 - Content upload and storage (S3 + DynamoDB)

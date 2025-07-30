@@ -1,8 +1,9 @@
 boto3
 botocore
-strands-agents[bedrock]
-anthropic
+anthropic>=0.40.0
 pydantic
 requests
 python-magic
 Pillow
+strands-agents
+psutil

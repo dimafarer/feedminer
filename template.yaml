@@ -169,6 +169,8 @@ Globals:
         FALLBACK_AI_PROVIDER: !Ref FallbackAIProvider
         PREFERRED_AI_MODEL: !Ref PreferredAIModel
         ENABLE_MODEL_COMPARISON: !Ref EnableModelComparison
+        # Debug mode for testing with small datasets
+        DEBUG_MODE: "true"
     Tracing: Active
     Architectures:
       - arm64
@@ -703,8 +705,10 @@ Resources:
       FunctionName: !Sub "${AWS::StackName}-content-analysis-${Environment}"
       CodeUri: src/agents/
       Handler: content_analysis.handler
-      Timeout: 300
-      MemorySize: 1024
+      Timeout: 900  # 15 minutes (maximum allowed) for large dataset processing
+      MemorySize: 2560  # Increased memory for processing large datasets (~$0.08/analysis
+      Layers:
+        - !Ref AIProvidersLayer
       Environment:
         Variables:
           CONTENT_TABLE: !Ref ContentTable
@@ -855,6 +859,44 @@ Resources:
             Path: /upload
             Method: POST
 
+  # Multi-File Instagram Upload Function (v0.3.0)
+  MultiUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-multi-upload-${Environment}"
+      CodeUri: src/api/
+      Handler: multi_upload.handler
+      Timeout: 300  # 5 minutes for ZIP processing
+      MemorySize: 1024  # Higher memory for ZIP extraction
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - S3CrudPolicy:
+            BucketName: !Ref ContentBucket
+      Events:
+        MultiUploadApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /multi-upload
+            Method: POST
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        Project: !Ref ProjectName
+        Owner: !Ref ResourceOwner
+        Team: !Ref TeamName
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        BusinessUnit: !Ref BusinessUnit
+        Application: "feedMiner"
+        Purpose: "Multi-File-Upload-Processing"
+        Component: "API-Lambda"
+        Version: !Ref ApplicationVersion
+
   ContentListFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -995,9 +1037,9 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-enhanced-instagram-parser-${Environment}"
       CodeUri: src/agents/
-      Handler: instagram_parser_v2.handler
-      Timeout: 300  # 5 minutes for AI processing
-      MemorySize: 1024  # More memory for AI processing
+      Handler: instagram_parser.handler
+      Timeout: 900  # 15 minutes for large dataset processing
+      MemorySize: 2560  # Increased memory for large dataset processing
       Layers:
         - !Ref AIProvidersLayer
       Environment:
@@ -1008,6 +1050,7 @@ Resources:
           # AI Provider Configuration
           PREFERRED_AI_PROVIDER: !Ref PrimaryAIProvider
           PREFERRED_AI_MODEL: !Ref PreferredAIModel
+          ANTHROPIC_API_KEY: !Ref AnthropicApiKey
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ContentTable
@@ -1047,6 +1090,7 @@ Resources:
           CONTENT_ANALYSIS_FUNCTION: !Ref ContentAnalysisAgent
           SUMMARIZATION_FUNCTION: !Ref SummarizationAgent
           EXTRACTION_FUNCTION: !Ref ExtractionAgent
+          INSTAGRAM_PARSER_FUNCTION: !Ref EnhancedInstagramParserFunction
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ContentTable
@@ -1058,6 +1102,8 @@ Resources:
             FunctionName: !Ref SummarizationAgent
         - LambdaInvokePolicy:
             FunctionName: !Ref ExtractionAgent
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EnhancedInstagramParserFunction
       Events:
         ContentTableStream:
           Type: DynamoDB

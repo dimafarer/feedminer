@@ -106,6 +106,7 @@ function App() {
     const totalItemsProcessed = metadata.total_items_processed || 
                                backendAnalysis.total_posts || 
                                (backendAnalysis.posts && backendAnalysis.posts.length) ||
+                               (metadata.export_info && metadata.export_info.totalDataPoints) ||
                                177;
     const dataTypesAnalyzed = metadata.data_types_analyzed || ['saved_posts'];
     
@@ -113,6 +114,7 @@ function App() {
     console.log('totalItemsProcessed source:', {
       'metadata.total_items_processed': metadata.total_items_processed,
       'backendAnalysis.total_posts': backendAnalysis.total_posts,
+      'metadata.export_info.totalDataPoints': metadata.export_info && metadata.export_info.totalDataPoints,
       'fallback': 177,
       'final_value': totalItemsProcessed
     });
