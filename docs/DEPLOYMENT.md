@@ -1,7 +1,8 @@
 # FeedMiner Deployment Guide
 
-**Version**: 0.2.0 (Multi-Model AI Integration)  
-**Status**: Production Ready - Multi-Provider AI Support
+**Version**: 0.3.0 (Multi-File Instagram Data Processing - Phase 1)  
+**Status**: Production Ready - Complete ZIP Processing Pipeline  
+**Latest Feature**: Multi-file Instagram export processing with smart sampling
 
 ## Prerequisites
 
