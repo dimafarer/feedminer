@@ -62,7 +62,7 @@ This document outlines a comprehensive AWS resource tagging strategy for the Fee
 | Tag Key | Description | Example Values | Data Source |
 |---------|-------------|----------------|-------------|
 | `Project` | Project identifier | `feedMiner` | Static |
-| `Owner` | Technical owner/lead | `dima.farer@company.com` | Parameter |
+| `Owner` | Technical owner/lead | `first.last@company.com` | Parameter |
 | `Team` | Responsible team | `AI-Platform`, `Data-Engineering` | Parameter |
 | `CostCenter` | Budget allocation code | `CC-1001`, `DEPT-AI-2025` | Parameter |
 | `RequestedBy` | Business stakeholder | `product-team@company.com` | Parameter |
@@ -253,7 +253,7 @@ Parameters:
   # Dynamic Values
   ResourceOwner:
     Type: String
-    Default: "dima.farer@company.com"
+    Default: "first.last@company.com"
     
   TeamName:
     Type: String

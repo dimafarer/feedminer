@@ -58,7 +58,7 @@ Parameters:
     
   ResourceOwner:
     Type: String
-    Default: "dima.farer@company.com"
+    Default: "first.last@company.com"
     Description: Technical owner/lead responsible for resources
     
   TeamName:
