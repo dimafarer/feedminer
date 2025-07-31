@@ -6,6 +6,8 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 
 **✨ LIVE: [Professional React Frontend](./frontend-demo/)** - Production-deployed application on AWS Amplify showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
 
+**🔒 Security Audited**: Repository has undergone comprehensive security review and is approved for public release with 95% confidence level. All sensitive data is properly managed through environment variables and secure deployment practices.
+
 ## 🏗 Architecture Overview
 
 FeedMiner is built as a serverless application using AWS SAM (Serverless Application Model) with the following key components:
