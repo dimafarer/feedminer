@@ -91,6 +91,7 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
 - `list.py`: Paginated content listing with user filtering
 - `get.py`: Individual content retrieval with raw data option
 - `job_status.py`: Processing job status tracking
+- `strands_model_switching.py`: **NEW v0.4.0** - Strands-based model switching and comparison
 
 **WebSocket Layer (`src/websocket/`)**
 - `connect.py`: Connection establishment with TTL-based cleanup

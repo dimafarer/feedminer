@@ -971,7 +971,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-model-switching-${Environment}"
       CodeUri: src/api/
-      Handler: model_switching.handler
+      Handler: strands_model_switching.handler
       Timeout: 300  # 5 minutes for AI comparison
       MemorySize: 1024
       Layers:

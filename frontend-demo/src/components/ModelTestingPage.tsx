@@ -36,7 +36,7 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
         console.log('Loading content list...');
         // Import the API directly to avoid hook re-render issues
         const { feedminerApi } = await import('../services/feedminerApi');
-        const response = await feedminerApi.listContent();
+        const response = await feedminerApi.listContent('demo-user');
         console.log('Content loaded:', response);
         setAvailableContent(response.items || []);
         
@@ -67,11 +67,6 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
     try {
       if (comparisonMode) {
         // Run comparison analysis with both providers
-        if (selectedContentId === 'test') {
-          setError('Comparison mode requires uploaded content. Please upload content first or select uploaded content.');
-          return;
-        }
-
         const comparisonRequest = {
           providers: [
             {
@@ -85,6 +80,8 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
               temperature: selectedProvider.temperature,
             },
           ],
+          // Include prompt for test mode
+          ...(selectedContentId === 'test' && { prompt: testPrompt }),
         };
 
         const response = await api.compareProviders(selectedContentId, comparisonRequest);
@@ -186,7 +183,7 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Content Selection</h3>
                 <p className="text-sm text-gray-600">
-                  Choose content to analyze {comparisonMode ? '(required for comparison)' : '(or use test mode)'}
+                  Choose content to analyze {comparisonMode ? '(uploaded content or test mode)' : '(or use test mode)'}
                 </p>
               </div>
 

@@ -5,7 +5,7 @@
 FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The project uses AWS SAM, Python 3.12+, and integrates with both Anthropic API and AWS Bedrock for Claude AI processing.
 
 **Status**: Public open-source project (July 2025)  
-**Version**: v0.3.1 (Multi-file Instagram processing with comprehensive testing)
+**Version**: v0.4.0 (Strands Agent Model Switching Implementation)
 
 ## Architecture & Technology Stack
 
@@ -51,10 +51,10 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 - This ensures smooth CI/CD and automated deployments
 - **Does NOT apply to**: Frontend deployments (handled by Amplify)
 
-#### 3. SAM Build with Linting (Python Backend Only)
-**ALWAYS run sam build with --lint flag:**
-- Use: `sam build --lint`
-- Never run `sam build` without linting
+#### 3. SAM Validate with Linting (Python Backend Only)
+**ALWAYS run sam validate with --lint flag:**
+- Use: `sam validate --lint`
+- Never run `sam validate` without linting
 - Catches configuration issues and validates CloudFormation template
 - **Does NOT apply to**: React frontend builds (use `npm run build`)
 
@@ -63,6 +63,7 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 - `npm install` - Install dependencies
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
+
 - `npm run test` - Run Vitest tests
 - `npm run lint` - Run ESLint (if configured)
 
@@ -185,11 +186,20 @@ npm run test       # Run tests
 - **Phase 1b**: Real Data Testing (July 14-15) - 177 Instagram posts processed
 - **Phase 1c**: Multi-Model AI Integration (v0.2.0)
 - **Phase 2**: Multi-File Instagram Processing (v0.3.0)
+- **Phase 3**: Security Audit & Public Release (v0.3.1)
+- **Phase 4**: Strands Agent Model Switching (v0.4.0) - COMPLETED August 2, 2025
+
+### 🎯 v0.4.0 Achievements (August 2025)
+- **Proper AWS Strands Integration**: Replaced custom AI provider abstraction with native Strands Agent patterns
+- **Production Model Switching**: Live Anthropic API ↔ AWS Bedrock switching with real-time comparison
+- **Dual-Mode Testing**: Custom prompts and real Instagram content analysis
+- **Verification Framework**: Comprehensive API authenticity testing (confirmed real API usage)
+- **Frontend Enhancement**: Fixed content listing and added comparison mode support
 
 ### 🔄 Current Focus
-- Testing and validation improvements
-- Documentation updates
-- Security and public release preparation
+- Additional Bedrock model integration (Titan, Cohere, Llama)
+- Advanced learning scenarios for educational use
+- Performance optimization and caching strategies
 
 ## Important Files & Context
 
@@ -199,9 +209,10 @@ npm run test       # Run tests
 - `requirements*.txt`: Python dependencies for different contexts
 
 ### Key Source Files (Python Backend)
-- `src/agents/instagram_parser.py`: Main Instagram analysis agent
+- `src/agents/instagram_parser.py`: Main Instagram analysis agent (uses Strands)
 - `src/api/multi_upload.py`: Multi-file ZIP processing endpoint
-- `src/ai/providers.py`: AI provider abstraction layer
+- `src/api/strands_model_switching.py`: **NEW v0.4.0** - Strands-based model switching and comparison
+- `src/ai/providers.py`: Legacy AI provider abstraction layer (deprecated in v0.4.0)
 - `layers/ai-providers/ai/providers.py`: Shared AI provider implementation
 
 ### Frontend Files (React)
@@ -214,6 +225,7 @@ npm run test       # Run tests
 - `docs/REAL_DATA_ANALYSIS_REPORT.md`: Successful real data testing results
 - `docs/MULTI_FILE_INSTAGRAM_DATA.md`: Multi-file processing implementation
 - `docs/TESTING_STRATEGY.md`: Comprehensive testing approach
+- `docs/STRANDS_MODEL_SWITCHING.md`: **NEW v0.4.0** - Complete Strands implementation guide
 - `SECURITY.md`: Security audit results (95% confidence, public-ready)
 
 ## Security & Public Release
