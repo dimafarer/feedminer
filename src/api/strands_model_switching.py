@@ -114,7 +114,13 @@ def handler(event, context):
 
 
 def create_strands_agent(provider: str, model_id: str, temperature: float = 0.7) -> Agent:
-    """Create a Strands agent with the specified model configuration."""
+    """Create a Strands agent with the specified model configuration.
+    
+    Supports multiple model families:
+    - Anthropic Claude (via Anthropic API and Bedrock)
+    - Amazon Nova (via Bedrock with inference profiles)
+    - Meta Llama (via Bedrock)
+    """
     
     system_prompt = """You are an expert at analyzing Instagram saved content. 
     You understand social media trends, content categories, and user behavior patterns.
@@ -142,12 +148,9 @@ def create_strands_agent(provider: str, model_id: str, temperature: float = 0.7)
             temperature=temperature,
             max_tokens=4096
         )
-    elif provider == "bedrock":
-        model = BedrockModel(
-            model_id=model_id,
-            temperature=temperature,
-            region=os.environ.get('AWS_REGION', 'us-west-2')
-        )
+    elif provider in ["bedrock", "nova", "llama"]:
+        # Handle all Bedrock-based models (Claude, Nova, Llama)
+        model = create_bedrock_model_for_family(model_id, temperature)
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     
@@ -158,7 +161,56 @@ def create_strands_agent(provider: str, model_id: str, temperature: float = 0.7)
     )
 
 
-def extract_strands_response(strands_result) -> Dict[str, Any]:
+def create_bedrock_model_for_family(model_id: str, temperature: float) -> BedrockModel:
+    """Create Strands BedrockModel with family-specific configuration.
+    
+    Based on test results:
+    - Claude models: Work with standard BedrockModel (no additional fields)
+    - Nova models: Work with standard BedrockModel (no additional fields needed)
+    - Llama models: Work with standard BedrockModel (no additional fields needed)
+    
+    The Strands BedrockModel handles parameter differences internally.
+    """
+    
+    # Determine model family
+    model_family = detect_model_family(model_id)
+    
+    # Create base configuration that works for all families
+    config = {
+        "model_id": model_id,
+        "temperature": temperature,
+        "region": os.environ.get('AWS_REGION', 'us-west-2')
+    }
+    
+    # Model family-specific adjustments
+    if model_family == "nova":
+        # Nova models use inference profile IDs and have different parameter names
+        # but Strands handles this internally - no additional_request_fields needed
+        pass
+    elif model_family == "llama":
+        # Llama models use different parameter names (max_gen_len vs max_tokens)
+        # but Strands handles this internally - no additional_request_fields needed
+        pass
+    elif model_family == "claude":
+        # Claude models work with standard Strands BedrockModel
+        pass
+    
+    return BedrockModel(**config)
+
+
+def detect_model_family(model_id: str) -> str:
+    """Detect model family from model ID."""
+    if "nova" in model_id.lower():
+        return "nova"
+    elif "llama" in model_id.lower():
+        return "llama"
+    elif "claude" in model_id.lower() or "anthropic" in model_id.lower():
+        return "claude"
+    else:
+        return "unknown"
+
+
+def extract_strands_response(strands_result, model_family: str = "claude") -> Dict[str, Any]:
     """Extract clean response data from Strands agent result."""
     
     try:
@@ -198,7 +250,7 @@ def extract_strands_response(strands_result) -> Dict[str, Any]:
             usage_info = metrics.get('accumulated_usage', {})
             cycle_durations = metrics.get('cycle_durations', [])
             
-            return {
+            response = {
                 "content": content,
                 "latency_ms": int(sum(cycle_durations) * 1000) if cycle_durations else 0,
                 "usage": {
@@ -206,8 +258,22 @@ def extract_strands_response(strands_result) -> Dict[str, Any]:
                     "output_tokens": usage_info.get('outputTokens', 0),
                     "total_tokens": usage_info.get('totalTokens', 0)
                 },
-                "success": True
+                "success": True,
+                "model_family": model_family
             }
+            
+            # Add model family-specific metadata
+            if model_family == "nova":
+                response["cost_tier"] = "very_low"
+                response["capabilities"] = ["text", "multimodal"]
+            elif model_family == "llama":
+                response["cost_tier"] = "low"
+                response["capabilities"] = ["text"]
+            elif model_family == "claude":
+                response["cost_tier"] = "high"
+                response["capabilities"] = ["text", "vision", "reasoning"]
+            
+            return response
         
         # Handle object with attributes
         elif hasattr(strands_result, 'message'):
@@ -223,7 +289,7 @@ def extract_strands_response(strands_result) -> Dict[str, Any]:
             usage_info = getattr(metrics, 'accumulated_usage', {})
             cycle_durations = getattr(metrics, 'cycle_durations', [])
             
-            return {
+            response = {
                 "content": content,
                 "latency_ms": int(sum(cycle_durations) * 1000) if cycle_durations else 0,
                 "usage": {
@@ -231,8 +297,22 @@ def extract_strands_response(strands_result) -> Dict[str, Any]:
                     "output_tokens": usage_info.get('outputTokens', 0),
                     "total_tokens": usage_info.get('totalTokens', 0)
                 },
-                "success": True
+                "success": True,
+                "model_family": model_family
             }
+            
+            # Add model family-specific metadata
+            if model_family == "nova":
+                response["cost_tier"] = "very_low"
+                response["capabilities"] = ["text", "multimodal"]
+            elif model_family == "llama":
+                response["cost_tier"] = "low"
+                response["capabilities"] = ["text"]
+            elif model_family == "claude":
+                response["cost_tier"] = "high"
+                response["capabilities"] = ["text", "vision", "reasoning"]
+            
+            return response
         else:
             # Fallback: try to extract text from string representation
             content = str(strands_result)
@@ -301,7 +381,8 @@ def handle_strands_analyze_with_provider(content_id: str, request_body: Dict[str
         end_time = datetime.now()
         
         # Extract clean response from Strands result
-        response_data = extract_strands_response(strands_result)
+        model_family = detect_model_family(model)
+        response_data = extract_strands_response(strands_result, model_family)
         response_data['provider'] = provider
         response_data['model'] = model
         
@@ -395,7 +476,8 @@ def handle_strands_compare_providers(content_id: str, request_body: Dict[str, An
                 end_time = datetime.now()
                 
                 # Extract response
-                response_data = extract_strands_response(strands_result)
+                model_family = detect_model_family(model)
+                response_data = extract_strands_response(strands_result, model_family)
                 response_data['provider'] = provider
                 response_data['model'] = model
                 
@@ -477,7 +559,8 @@ def handle_test_strands_integration(body: Dict[str, Any], headers: Dict[str, str
         end_time = datetime.now()
         
         # Extract response
-        response_data = extract_strands_response(strands_result)
+        model_family = detect_model_family(model)
+        response_data = extract_strands_response(strands_result, model_family)
         response_data['provider'] = provider
         response_data['model'] = model
         
@@ -574,7 +657,9 @@ def get_default_model(provider: str) -> str:
     """Get default model for provider."""
     defaults = {
         "anthropic": "claude-3-5-sonnet-20241022",
-        "bedrock": "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        "bedrock": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "nova": "us.amazon.nova-micro-v1:0",  # Fastest, lowest cost Nova model
+        "llama": "meta.llama3-1-8b-instruct-v1:0"  # Efficient Llama model
     }
     return defaults.get(provider, "")
 

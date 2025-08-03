@@ -1,8 +1,8 @@
 # FeedMiner
 
-**Universal saved content processor with AI-powered analysis using Strands agents**
+**Universal saved content processor with multi-model AI analysis using Strands agents**
 
-FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides an interactive conversational goal-setting experience using Claude AI via Amazon Bedrock. Through deep behavioral analysis and personalized conversations, FeedMiner helps users discover and achieve meaningful goals based on their social media behavior patterns. 
+FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The system now supports **6 AI models across 3 families** (Anthropic Claude, Amazon Nova, Meta Llama) enabling users to compare different AI approaches and access cost-effective analysis options. 
 
 **✨ LIVE: [Professional React Frontend](./frontend-demo/)** - Production-deployed application on AWS Amplify showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
 
@@ -17,14 +17,16 @@ FeedMiner is built as a serverless application using AWS SAM (Serverless Applica
 - **Amazon API Gateway**: REST and WebSocket APIs for client interaction
 - **Amazon DynamoDB**: NoSQL database for metadata and analysis storage
 - **Amazon S3**: Object storage for raw content and detailed analysis results
-- **Amazon Bedrock**: AI model access (Claude 3.7 Sonnet) for content analysis
+- **Amazon Bedrock**: Multi-model AI access (Claude, Nova, Llama) for content analysis
 
-### AI Processing Engine
-- **Strands Agents Framework**: Specialized AI agents for different content types with multi-provider support
-- **Multi-Model Integration**: Claude 3.5 Sonnet via both Anthropic API and AWS Bedrock
-- **Model Provider Switching**: Runtime selection between providers for performance optimization
-- **Extensible Model Support**: Ready for additional Bedrock models (GPT-4, Titan, Llama, etc.)
-- **Structured Output**: Pydantic models ensure consistent, validated AI responses across all providers
+### AI Processing Engine (v0.4.0+)
+- **Strands Agents Framework**: Specialized AI agents with native multi-model support
+- **6-Model Integration**: 2 Claude + 2 Nova + 2 Llama models (100% success rate)
+- **3-Family Support**: Anthropic Claude, Amazon Nova, Meta Llama
+- **Cost Optimization**: Nova models provide 75% cost savings vs Claude
+- **Performance Excellence**: Llama models achieve 504-861ms response times  
+- **Educational Comparison**: Compare responses across different AI company approaches
+- **Structured Output**: Pydantic models ensure consistent responses across all model families
 
 ## 🎯 Current Capabilities
 

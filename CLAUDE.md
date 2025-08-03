@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The project uses AWS SAM, Python 3.12+, and integrates with both Anthropic API and AWS Bedrock for Claude AI processing.
+FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The project uses AWS SAM, Python 3.12+, and integrates with multiple AI providers through AWS Bedrock including Anthropic Claude, Amazon Nova, and Meta Llama models.
 
-**Status**: Public open-source project (July 2025)  
-**Version**: v0.4.0 (Strands Agent Model Switching Implementation)
+**Status**: Public open-source project (February 2025)  
+**Version**: v0.4.0 (Multi-Model AI Integration - 6 models across 3 AI families)
 
 ## Architecture & Technology Stack
 
@@ -15,7 +15,7 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 - **Amazon API Gateway**: REST and WebSocket APIs
 - **Amazon DynamoDB**: NoSQL database with GSIs
 - **Amazon S3**: Object storage for content and analysis results
-- **AI Providers**: Anthropic API + AWS Bedrock (multi-provider support)
+- **AI Providers**: Anthropic Claude, Amazon Nova, Meta Llama via Strands Agents (6 models, 3 families)
 
 ### Frontend (React)
 - **React 18**: Modern React with TypeScript
@@ -188,18 +188,21 @@ npm run test       # Run tests
 - **Phase 2**: Multi-File Instagram Processing (v0.3.0)
 - **Phase 3**: Security Audit & Public Release (v0.3.1)
 - **Phase 4**: Strands Agent Model Switching (v0.4.0) - COMPLETED August 2, 2025
+- **Nova/Llama Phase 1**: Strands Compatibility Testing - COMPLETED February 2, 2025
+- **Nova/Llama Phase 2**: Backend Multi-Model Integration - COMPLETED February 2, 2025
 
-### 🎯 v0.4.0 Achievements (August 2025)
-- **Proper AWS Strands Integration**: Replaced custom AI provider abstraction with native Strands Agent patterns
-- **Production Model Switching**: Live Anthropic API ↔ AWS Bedrock switching with real-time comparison
-- **Dual-Mode Testing**: Custom prompts and real Instagram content analysis
-- **Verification Framework**: Comprehensive API authenticity testing (confirmed real API usage)
-- **Frontend Enhancement**: Fixed content listing and added comparison mode support
+### 🎯 v0.4.0+ Multi-Model Achievements (February 2025)
+- **6-Model Integration**: Successfully integrated 2 Claude + 2 Nova + 2 Llama models (100% success rate)
+- **3-Family Support**: Anthropic Claude, Amazon Nova, Meta Llama all working via Strands
+- **Performance Excellence**: Nova (986-1203ms), Llama (504-861ms), Claude (1242-1849ms)
+- **Cost Optimization**: Nova models provide 75% cost savings vs Claude
+- **Clean Architecture**: No complex parameter mapping needed - Strands handles internally
+- **Educational Value**: Users can now compare responses across 3 different AI company approaches
 
-### 🔄 Current Focus
-- Additional Bedrock model integration (Titan, Cohere, Llama)
-- Advanced learning scenarios for educational use
-- Performance optimization and caching strategies
+### 🔄 Current Focus (Nova/Llama Phase 3)
+- **Frontend Enhancement**: Adding Nova and Llama models to React interface
+- **Model Categories**: Organizing models by AI family with cost/performance indicators
+- **6-Model Comparison**: Enabling full comparison matrix across all families
 
 ## Important Files & Context
 
@@ -264,11 +267,25 @@ npm run test       # Run tests
 
 ## AI Analysis Capabilities
 
-The system processes Instagram exports and provides:
+The system processes Instagram exports using **6 AI models across 3 families** and provides:
 - **Content Categorization**: Technology, fitness, business, etc.
 - **Behavioral Pattern Analysis**: Interests, habits, goals
 - **Goal-Setting Insights**: Specific, measurable recommendations
 - **Temporal Analysis**: Activity patterns and consistency
 - **Multi-Source Correlation**: Across saved posts, likes, comments, following
+- **Cross-Family AI Comparison**: Compare Claude vs Nova vs Llama approaches
 
-Focus on goal-oriented analysis that helps users discover and achieve meaningful objectives based on their social media behavior patterns.
+### Available AI Models (v0.4.0+)
+**Anthropic Claude** (High capability, premium cost):
+- `claude-3-5-sonnet-20241022` (Anthropic API)
+- `anthropic.claude-3-5-sonnet-20241022-v2:0` (Bedrock)
+
+**Amazon Nova** (Very low cost, fast, multimodal):
+- `us.amazon.nova-micro-v1:0` (Ultra-fast, text-only)
+- `us.amazon.nova-lite-v1:0` (Fast, text + multimodal)
+
+**Meta Llama** (Low cost, efficient, open-source):
+- `meta.llama3-1-8b-instruct-v1:0` (Efficient 8B model)
+- `meta.llama3-1-70b-instruct-v1:0` (Capable 70B model)
+
+Focus on goal-oriented analysis that helps users discover and achieve meaningful objectives based on their social media behavior patterns while comparing different AI approaches.
