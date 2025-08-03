@@ -10,13 +10,13 @@ interface ModelTestingPageProps {
 
 const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
   const [selectedProvider, setSelectedProvider] = useState<ModelProvider>({
-    provider: 'bedrock',
-    model: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+    provider: 'nova',
+    model: 'us.amazon.nova-micro-v1:0',
     temperature: 0.7,
   });
   
   const [comparisonMode, setComparisonMode] = useState(false);
-  const [testPrompt, setTestPrompt] = useState('Analyze the benefits of using multiple AI providers in a content analysis system. Focus on performance, cost, and reliability aspects.');
+  const [testPrompt, setTestPrompt] = useState('Compare the capabilities of different AI model families (Claude, Nova, Llama) for content analysis. Discuss their strengths, performance characteristics, and ideal use cases.');
   
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
@@ -66,9 +66,10 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
 
     try {
       if (comparisonMode) {
-        // Run comparison analysis with both providers
+        // Run comparison analysis across all 3 AI families (6 models total)
         const comparisonRequest = {
           providers: [
+            // Claude family (Anthropic)
             {
               provider: 'anthropic' as const,
               model: 'claude-3-5-sonnet-20241022',
@@ -77,6 +78,28 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
             {
               provider: 'bedrock' as const,
               model: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+              temperature: selectedProvider.temperature,
+            },
+            // Nova family (Amazon)
+            {
+              provider: 'nova' as const,
+              model: 'us.amazon.nova-micro-v1:0',
+              temperature: selectedProvider.temperature,
+            },
+            {
+              provider: 'nova' as const,
+              model: 'us.amazon.nova-lite-v1:0',
+              temperature: selectedProvider.temperature,
+            },
+            // Llama family (Meta)
+            {
+              provider: 'llama' as const,
+              model: 'meta.llama3-1-8b-instruct-v1:0',
+              temperature: selectedProvider.temperature,
+            },
+            {
+              provider: 'llama' as const,
+              model: 'meta.llama3-1-70b-instruct-v1:0',
               temperature: selectedProvider.temperature,
             },
           ],

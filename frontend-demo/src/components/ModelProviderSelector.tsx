@@ -14,34 +14,96 @@ interface ModelOption {
   name: string;
   description: string;
   cost: string;
+  performance: string;
+  capabilities: string[];
   disabled?: boolean;
 }
 
-const AVAILABLE_MODELS: Record<'anthropic' | 'bedrock', ModelOption[]> = {
-  anthropic: [
-    {
-      id: 'claude-3-5-sonnet-20241022',
-      name: 'Claude 3.5 Sonnet',
-      description: 'Most capable model for complex reasoning and analysis',
-      cost: 'Standard',
-    },
-  ],
-  bedrock: [
-    {
-      id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-      name: 'Claude 3.5 Sonnet (Bedrock)',
-      description: 'Same model via AWS Bedrock for enterprise deployment',
-      cost: 'Lower',
-    },
-    // Future models can be added here
-    {
-      id: 'anthropic.claude-3-haiku-20240307-v1:0',
-      name: 'Claude 3 Haiku (Bedrock)',
-      description: 'Faster, cost-effective model for simpler tasks',
-      cost: 'Lowest',
-      disabled: true, // Not yet implemented
-    },
-  ],
+interface ModelFamily {
+  name: string;
+  color: string;
+  description: string;
+  models: ModelOption[];
+}
+
+const MODEL_FAMILIES: Record<'claude' | 'nova' | 'llama', ModelFamily> = {
+  claude: {
+    name: 'Anthropic Claude',
+    color: 'orange',
+    description: 'Advanced reasoning and multimodal capabilities',
+    models: [
+      {
+        id: 'claude-3-5-sonnet-20241022',
+        name: 'Claude 3.5 Sonnet',
+        description: 'Most capable model for complex reasoning and analysis',
+        cost: 'High',
+        performance: '1200ms',
+        capabilities: ['Text', 'Vision', 'Reasoning'],
+      },
+      {
+        id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+        name: 'Claude 3.5 Sonnet (Bedrock)',
+        description: 'Same model via AWS Bedrock for enterprise deployment',
+        cost: 'High',
+        performance: '1800ms',
+        capabilities: ['Text', 'Vision', 'Reasoning'],
+      },
+    ],
+  },
+  nova: {
+    name: 'Amazon Nova',
+    color: 'blue',
+    description: '75% cost savings with excellent performance',
+    models: [
+      {
+        id: 'us.amazon.nova-micro-v1:0',
+        name: 'Nova Micro',
+        description: 'Ultra-fast, text-only model for rapid analysis',
+        cost: 'Very Low',
+        performance: '986ms',
+        capabilities: ['Text'],
+      },
+      {
+        id: 'us.amazon.nova-lite-v1:0',
+        name: 'Nova Lite',
+        description: 'Fast, multimodal model with great value',
+        cost: 'Very Low',
+        performance: '1200ms',
+        capabilities: ['Text', 'Multimodal'],
+      },
+    ],
+  },
+  llama: {
+    name: 'Meta Llama',
+    color: 'green',
+    description: 'Open-source efficiency with competitive performance',
+    models: [
+      {
+        id: 'meta.llama3-1-8b-instruct-v1:0',
+        name: 'Llama 3.1 8B',
+        description: 'Efficient model with excellent speed',
+        cost: 'Low',
+        performance: '504ms',
+        capabilities: ['Text'],
+      },
+      {
+        id: 'meta.llama3-1-70b-instruct-v1:0',
+        name: 'Llama 3.1 70B',
+        description: 'More capable model with balanced performance',
+        cost: 'Low',
+        performance: '861ms',
+        capabilities: ['Text'],
+      },
+    ],
+  },
+};
+
+// Legacy structure for backward compatibility
+const AVAILABLE_MODELS: Record<'anthropic' | 'bedrock' | 'nova' | 'llama', ModelOption[]> = {
+  anthropic: MODEL_FAMILIES.claude.models.filter(m => m.id.includes('claude-3-5-sonnet-20241022')),
+  bedrock: MODEL_FAMILIES.claude.models.filter(m => m.id.includes('anthropic.')),
+  nova: MODEL_FAMILIES.nova.models,
+  llama: MODEL_FAMILIES.llama.models,
 };
 
 const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
@@ -54,7 +116,7 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [comparisonEnabled, setComparisonEnabled] = useState(false);
 
-  const handleProviderSelect = (provider: 'anthropic' | 'bedrock', modelId: string) => {
+  const handleProviderSelect = (provider: 'anthropic' | 'bedrock' | 'nova' | 'llama', modelId: string) => {
     const newProvider: ModelProvider = {
       provider,
       model: modelId,
@@ -63,24 +125,47 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
     onProviderChange(newProvider);
   };
 
+  const handleFamilySelect = (family: 'claude' | 'nova' | 'llama') => {
+    const firstModel = MODEL_FAMILIES[family].models[0];
+    const provider = family === 'claude' ? 'anthropic' : family;
+    handleProviderSelect(provider as any, firstModel.id);
+  };
+
   const handleToggleComparison = (enabled: boolean) => {
     setComparisonEnabled(enabled);
     onToggleComparison?.(enabled);
   };
 
-  const selectedModel = [...AVAILABLE_MODELS.anthropic, ...AVAILABLE_MODELS.bedrock]
-    .find(model => model.id === selectedProvider.model);
+  const selectedModel = [
+    ...AVAILABLE_MODELS.anthropic, 
+    ...AVAILABLE_MODELS.bedrock,
+    ...AVAILABLE_MODELS.nova,
+    ...AVAILABLE_MODELS.llama
+  ].find(model => model.id === selectedProvider.model);
+
+  const getModelFamily = (modelId: string): 'claude' | 'nova' | 'llama' => {
+    if (modelId.includes('nova')) return 'nova';
+    if (modelId.includes('llama')) return 'llama';
+    return 'claude';
+  };
+
+  const currentFamily = getModelFamily(selectedProvider.model);
+  const familyColor = MODEL_FAMILIES[currentFamily].color;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">AI Model Selection</h3>
-          <p className="text-sm text-gray-600">Choose your preferred AI provider and model</p>
+          <p className="text-sm text-gray-600">Choose from 6 models across 3 AI families</p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-500">v0.2.0</span>
-          <div className="w-2 h-2 bg-green-400 rounded-full" title="Multi-Model AI Active"></div>
+          <span className="text-xs text-gray-500">v0.4.0+</span>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-orange-400 rounded-full" title="Claude Family"></div>
+            <div className="w-2 h-2 bg-blue-400 rounded-full" title="Nova Family"></div>
+            <div className="w-2 h-2 bg-green-400 rounded-full" title="Llama Family"></div>
+          </div>
         </div>
       </div>
 
@@ -89,14 +174,29 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className={`w-3 h-3 rounded-full ${
-              selectedProvider.provider === 'anthropic' ? 'bg-orange-400' : 'bg-blue-400'
+              familyColor === 'orange' ? 'bg-orange-400' : 
+              familyColor === 'blue' ? 'bg-blue-400' : 'bg-green-400'
             }`}></div>
             <div>
               <div className="font-medium text-gray-900">
                 {selectedModel?.name || selectedProvider.model}
               </div>
-              <div className="text-sm text-gray-600 capitalize">
-                {selectedProvider.provider} • Temperature: {selectedProvider.temperature || 0.7}
+              <div className="text-sm text-gray-600 flex items-center space-x-2">
+                <span className="capitalize">{MODEL_FAMILIES[currentFamily].name}</span>
+                <span>•</span>
+                <span>Temp: {selectedProvider.temperature || 0.7}</span>
+                {selectedModel && (
+                  <>
+                    <span>•</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      selectedModel.cost === 'Very Low' ? 'bg-green-100 text-green-700' :
+                      selectedModel.cost === 'Low' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {selectedModel.cost} Cost
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -114,74 +214,102 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
       {isExpanded && (
         <div className="space-y-4 border-t border-gray-200 pt-4">
           
-          {/* Provider Tabs */}
+          {/* Model Family Tabs */}
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {Object.keys(AVAILABLE_MODELS).map((provider) => (
+            {(Object.keys(MODEL_FAMILIES) as Array<keyof typeof MODEL_FAMILIES>).map((family) => (
               <button
-                key={provider}
-                onClick={() => {
-                  const models = AVAILABLE_MODELS[provider as keyof typeof AVAILABLE_MODELS];
-                  const firstModel = models.find(m => !m.disabled);
-                  if (firstModel) {
-                    handleProviderSelect(provider as 'anthropic' | 'bedrock', firstModel.id);
-                  }
-                }}
+                key={family}
+                onClick={() => handleFamilySelect(family)}
                 disabled={disabled}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  selectedProvider.provider === provider
+                  currentFamily === family
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 disabled:text-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    provider === 'anthropic' ? 'bg-orange-400' : 'bg-blue-400'
+                    MODEL_FAMILIES[family].color === 'orange' ? 'bg-orange-400' : 
+                    MODEL_FAMILIES[family].color === 'blue' ? 'bg-blue-400' : 'bg-green-400'
                   }`}></div>
-                  <span className="capitalize">{provider}</span>
-                  {provider === 'bedrock' && (
-                    <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">AWS</span>
+                  <span>{family === 'claude' ? 'Claude' : family === 'nova' ? 'Nova' : 'Llama'}</span>
+                  {family === 'nova' && (
+                    <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">75% Savings</span>
+                  )}
+                  {family === 'llama' && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Fastest</span>
                   )}
                 </div>
               </button>
             ))}
           </div>
 
-          {/* Model Options */}
-          <div className="space-y-2">
-            {AVAILABLE_MODELS[selectedProvider.provider].map((model) => (
-              <button
-                key={model.id}
-                onClick={() => handleProviderSelect(selectedProvider.provider, model.id)}
-                disabled={disabled || model.disabled}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  selectedProvider.model === model.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                } ${(disabled || model.disabled) ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="font-medium text-gray-900">{model.name}</div>
-                      {model.disabled && (
-                        <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                          Coming Soon
-                        </span>
-                      )}
+          {/* Family Description */}
+          <div className="bg-gray-50 rounded-lg p-3">
+            <div className="text-sm font-medium text-gray-900">{MODEL_FAMILIES[currentFamily].name}</div>
+            <div className="text-xs text-gray-600 mt-1">{MODEL_FAMILIES[currentFamily].description}</div>
+          </div>
+
+          {/* Model Options for Current Family */}
+          <div className="space-y-3">
+            {MODEL_FAMILIES[currentFamily].models.map((model) => {
+              const provider = currentFamily === 'claude' 
+                ? (model.id.includes('anthropic.') ? 'bedrock' : 'anthropic')
+                : currentFamily;
+              
+              return (
+                <button
+                  key={model.id}
+                  onClick={() => handleProviderSelect(provider as any, model.id)}
+                  disabled={disabled || model.disabled}
+                  className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                    selectedProvider.model === model.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  } ${(disabled || model.disabled) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <div className="font-medium text-gray-900">{model.name}</div>
+                        {model.disabled && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                            Coming Soon
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">{model.description}</div>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-xs text-gray-500">Performance:</span>
+                          <span className="text-xs font-medium text-gray-700">{model.performance}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-xs text-gray-500">Capabilities:</span>
+                          <div className="flex space-x-1">
+                            {model.capabilities.map((cap, idx) => (
+                              <span key={idx} className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                {cap}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">{model.description}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-xs font-medium ${
-                      model.cost === 'Lowest' ? 'text-green-600' :
-                      model.cost === 'Lower' ? 'text-blue-600' : 'text-gray-600'
-                    }`}>
-                      {model.cost} Cost
+                    <div className="text-right ml-4">
+                      <div className={`text-sm font-medium px-2 py-1 rounded ${
+                        model.cost === 'Very Low' ? 'bg-green-100 text-green-700' :
+                        model.cost === 'Low' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {model.cost}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Cost</div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
 
           {/* Temperature Control */}
@@ -210,13 +338,13 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
         </div>
       )}
 
-      {/* Provider Comparison Toggle */}
+      {/* Model Family Comparison Toggle */}
       {showComparison && (
         <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-900">Compare Providers</div>
-              <div className="text-xs text-gray-600">Run analysis with both Anthropic and Bedrock</div>
+              <div className="text-sm font-medium text-gray-900">Compare AI Families</div>
+              <div className="text-xs text-gray-600">Run analysis with Claude vs Nova vs Llama</div>
             </div>
             <button
               onClick={() => handleToggleComparison(!comparisonEnabled)}
@@ -232,6 +360,25 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
               />
             </button>
           </div>
+          {comparisonEnabled && (
+            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+              <div className="text-xs text-blue-800 font-medium mb-2">Comparison will include:</div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <span>Claude 3.5 Sonnet</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>Nova Micro</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Llama 3.1 8B</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

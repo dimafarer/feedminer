@@ -32,15 +32,15 @@ export interface JobStatus {
   result?: any;
 }
 
-// v0.2.0 Multi-Model AI Integration Types
+// v0.4.0+ Multi-Model AI Integration Types (6 models, 3 families)
 export interface ModelProvider {
-  provider: 'anthropic' | 'bedrock';
+  provider: 'anthropic' | 'bedrock' | 'nova' | 'llama';
   model: string;
   temperature?: number;
 }
 
 export interface AnalysisRequest {
-  provider: 'anthropic' | 'bedrock';
+  provider: 'anthropic' | 'bedrock' | 'nova' | 'llama';
   model: string;
   temperature?: number;
   prompt?: string; // For test mode
@@ -62,6 +62,9 @@ export interface AnalysisResponse {
       total_tokens: number;
     };
     success: boolean;
+    model_family?: string; // v0.4.0+: claude, nova, llama
+    cost_tier?: string; // v0.4.0+: very_low, low, high
+    capabilities?: string[]; // v0.4.0+: text, multimodal, vision, reasoning
   };
   timestamp: string;
   test_mode?: boolean;
