@@ -362,11 +362,11 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
           </div>
           {comparisonEnabled && (
             <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-              <div className="text-xs text-blue-800 font-medium mb-2">Comparison will include:</div>
+              <div className="text-xs text-blue-800 font-medium mb-2">3-Family Comparison (optimized for speed):</div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-                  <span>Claude 3.5 Sonnet</span>
+                  <span>Claude Sonnet</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
@@ -374,8 +374,11 @@ const ModelProviderSelector: React.FC<ModelProviderSelectorProps> = ({
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span>Llama 3.1 8B</span>
+                  <span>Llama 8B</span>
                 </div>
+              </div>
+              <div className="text-xs text-blue-600 mt-1">
+                Represents best performance from each AI family
               </div>
             </div>
           )}

@@ -66,40 +66,25 @@ const ModelTestingPage: React.FC<ModelTestingPageProps> = ({ onBack }) => {
 
     try {
       if (comparisonMode) {
-        // Run comparison analysis across all 3 AI families (6 models total)
+        // Run comparison analysis across 3 AI families (3 representative models to avoid timeout)
         const comparisonRequest = {
           providers: [
-            // Claude family (Anthropic)
+            // Claude family (best representative)
             {
               provider: 'anthropic' as const,
               model: 'claude-3-5-sonnet-20241022',
               temperature: selectedProvider.temperature,
             },
-            {
-              provider: 'bedrock' as const,
-              model: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-              temperature: selectedProvider.temperature,
-            },
-            // Nova family (Amazon)
+            // Nova family (fastest, most cost-effective)
             {
               provider: 'nova' as const,
               model: 'us.amazon.nova-micro-v1:0',
               temperature: selectedProvider.temperature,
             },
-            {
-              provider: 'nova' as const,
-              model: 'us.amazon.nova-lite-v1:0',
-              temperature: selectedProvider.temperature,
-            },
-            // Llama family (Meta)
+            // Llama family (fastest open-source)
             {
               provider: 'llama' as const,
               model: 'meta.llama3-1-8b-instruct-v1:0',
-              temperature: selectedProvider.temperature,
-            },
-            {
-              provider: 'llama' as const,
-              model: 'meta.llama3-1-70b-instruct-v1:0',
               temperature: selectedProvider.temperature,
             },
           ],
