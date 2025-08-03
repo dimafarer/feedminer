@@ -258,4 +258,5 @@ This implementation sets a new standard for **multi-provider AI integration** an
 **Total Models**: 6 (Claude 2 + Nova 2 + Llama 2)  
 **Success Rate**: 100% across all testing phases  
 **Production Status**: Live and fully functional  
+**Live Demo**: [https://main.d1txsc36hbt4ub.amplifyapp.com/](https://main.d1txsc36hbt4ub.amplifyapp.com/)  
 **User Value**: Immediate access to 3 AI families with rich comparison capabilities

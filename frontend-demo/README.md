@@ -312,7 +312,7 @@ cd frontend-demo && npm run dev  # Start demo
 
 ## 📞 Contact & Demo Access
 
-**Live Demo**: [Deploy to your preferred hosting]  
+**Live Demo**: [https://main.d1txsc36hbt4ub.amplifyapp.com/](https://main.d1txsc36hbt4ub.amplifyapp.com/)  
 **Backend API**: Already deployed and functional  
 **Portfolio Integration**: Ready for immediate use
 

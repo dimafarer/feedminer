@@ -4,7 +4,7 @@
 
 FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The system now supports **6 AI models across 3 families** (Anthropic Claude, Amazon Nova, Meta Llama) enabling users to compare different AI approaches and access cost-effective analysis options. 
 
-**✨ LIVE: [Professional React Frontend](./frontend-demo/)** - Production-deployed application on AWS Amplify showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
+**✨ LIVE: [Professional React Frontend](https://main.d1txsc36hbt4ub.amplifyapp.com/)** - Production-deployed application on AWS Amplify showcasing real analysis results from 177 Instagram posts with interactive visualizations and goal recommendations.
 
 **🔒 Security Audited**: Repository has undergone comprehensive security review and is approved for public release with 95% confidence level. All sensitive data is properly managed through environment variables and secure deployment practices.
 

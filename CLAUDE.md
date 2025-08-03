@@ -21,7 +21,7 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 - **React 18**: Modern React with TypeScript
 - **Vite**: Fast build tool and dev server
 - **Tailwind CSS**: Utility-first CSS framework
-- **AWS Amplify**: Production deployment and hosting
+- **AWS Amplify**: Production deployment and hosting - [Live Demo](https://main.d1txsc36hbt4ub.amplifyapp.com/)
 - **Vitest**: Testing framework for React components
 
 ### Key Directories
