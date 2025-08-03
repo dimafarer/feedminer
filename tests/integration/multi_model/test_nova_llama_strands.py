@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Set environment variables
-os.environ['ANTHROPIC_API_KEY'] = open('../creds/anthropic-apikey').readlines()[1].strip()
+os.environ['ANTHROPIC_API_KEY'] = open('../../../../creds/anthropic-apikey').readlines()[1].strip()
 os.environ['AWS_REGION'] = 'us-west-2'
 
 # Add source paths
