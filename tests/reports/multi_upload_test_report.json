@@ -1,0 +1,366 @@
+{
+  "test_summary": {
+    "total_tests": 9,
+    "successful_tests": 9,
+    "failed_tests": 0,
+    "test_timestamp": "2025-08-04 07:46:28"
+  },
+  "small_dataset_results": [
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "f9029e77-3fe4-45f5-933f-95119aa5c915",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/f9029e77-3fe4-45f5-933f-95119aa5c915/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/f9029e77-3fe4-45f5-933f-95119aa5c915/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/f9029e77-3fe4-45f5-933f-95119aa5c915/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "claude-sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.7,
+        "family": "Claude"
+      },
+      "payload_size": 876,
+      "duration_seconds": 0.58,
+      "test_type": "small_dataset",
+      "content_id": "f9029e77-3fe4-45f5-933f-95119aa5c915"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "4d7168ca-5f51-4d5d-a465-c7e471c87401",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/4d7168ca-5f51-4d5d-a465-c7e471c87401/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/4d7168ca-5f51-4d5d-a465-c7e471c87401/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/4d7168ca-5f51-4d5d-a465-c7e471c87401/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "claude-bedrock",
+        "provider": "bedrock",
+        "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "temperature": 0.7,
+        "family": "Claude"
+      },
+      "payload_size": 889,
+      "duration_seconds": 0.45,
+      "test_type": "small_dataset",
+      "content_id": "4d7168ca-5f51-4d5d-a465-c7e471c87401"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "c451544b-3515-4dbd-a97f-c768b1221e28",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/c451544b-3515-4dbd-a97f-c768b1221e28/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/c451544b-3515-4dbd-a97f-c768b1221e28/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/c451544b-3515-4dbd-a97f-c768b1221e28/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "nova-micro",
+        "provider": "nova",
+        "model": "us.amazon.nova-micro-v1:0",
+        "temperature": 0.7,
+        "family": "Nova"
+      },
+      "payload_size": 870,
+      "duration_seconds": 0.4,
+      "test_type": "small_dataset",
+      "content_id": "c451544b-3515-4dbd-a97f-c768b1221e28"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "06faa010-5560-4251-856c-4d4541988d72",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/06faa010-5560-4251-856c-4d4541988d72/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/06faa010-5560-4251-856c-4d4541988d72/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/06faa010-5560-4251-856c-4d4541988d72/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "nova-lite",
+        "provider": "nova",
+        "model": "us.amazon.nova-lite-v1:0",
+        "temperature": 0.7,
+        "family": "Nova"
+      },
+      "payload_size": 869,
+      "duration_seconds": 0.78,
+      "test_type": "small_dataset",
+      "content_id": "06faa010-5560-4251-856c-4d4541988d72"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "0b289715-034a-4f1b-9208-bf6b9d274a63",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/0b289715-034a-4f1b-9208-bf6b9d274a63/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/0b289715-034a-4f1b-9208-bf6b9d274a63/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/0b289715-034a-4f1b-9208-bf6b9d274a63/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "llama-8b",
+        "provider": "llama",
+        "model": "meta.llama3-1-8b-instruct-v1:0",
+        "temperature": 0.7,
+        "family": "Llama"
+      },
+      "payload_size": 876,
+      "duration_seconds": 1.28,
+      "test_type": "small_dataset",
+      "content_id": "0b289715-034a-4f1b-9208-bf6b9d274a63"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "d3465626-90f3-477a-ab11-102032aaba27",
+        "message": "Instagram export uploaded successfully with 2 data types",
+        "s3Key": "uploads/d3465626-90f3-477a-ab11-102032aaba27/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts",
+          "liked_posts"
+        ],
+        "totalItems": 3,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 2,
+            "s3Key": "uploads/d3465626-90f3-477a-ab11-102032aaba27/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          },
+          "liked_posts": {
+            "count": 1,
+            "s3Key": "uploads/d3465626-90f3-477a-ab11-102032aaba27/liked_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "llama-70b",
+        "provider": "llama",
+        "model": "meta.llama3-1-70b-instruct-v1:0",
+        "temperature": 0.7,
+        "family": "Llama"
+      },
+      "payload_size": 877,
+      "duration_seconds": 0.86,
+      "test_type": "small_dataset",
+      "content_id": "d3465626-90f3-477a-ab11-102032aaba27"
+    }
+  ],
+  "full_dataset_results": [
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "1f32162f-774a-48c7-aa26-c5c5e004de88",
+        "message": "Instagram export uploaded successfully with 1 data types",
+        "s3Key": "uploads/1f32162f-774a-48c7-aa26-c5c5e004de88/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts"
+        ],
+        "totalItems": 50,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 50,
+            "s3Key": "uploads/1f32162f-774a-48c7-aa26-c5c5e004de88/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "claude-sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-20241022",
+        "temperature": 0.7,
+        "family": "Claude"
+      },
+      "payload_size": 7416,
+      "duration_seconds": 0.71,
+      "test_type": "full_dataset",
+      "content_id": "1f32162f-774a-48c7-aa26-c5c5e004de88"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "ece256f0-2a79-40f5-a51a-24996a56b22d",
+        "message": "Instagram export uploaded successfully with 1 data types",
+        "s3Key": "uploads/ece256f0-2a79-40f5-a51a-24996a56b22d/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts"
+        ],
+        "totalItems": 50,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 50,
+            "s3Key": "uploads/ece256f0-2a79-40f5-a51a-24996a56b22d/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "nova-micro",
+        "provider": "nova",
+        "model": "us.amazon.nova-micro-v1:0",
+        "temperature": 0.7,
+        "family": "Nova"
+      },
+      "payload_size": 7410,
+      "duration_seconds": 1.37,
+      "test_type": "full_dataset",
+      "content_id": "ece256f0-2a79-40f5-a51a-24996a56b22d"
+    },
+    {
+      "status_code": 200,
+      "response": {
+        "contentId": "248e347a-79d4-4eeb-9daf-e105c3b1c73f",
+        "message": "Instagram export uploaded successfully with 1 data types",
+        "s3Key": "uploads/248e347a-79d4-4eeb-9daf-e105c3b1c73f/consolidated.json",
+        "status": "uploaded",
+        "type": "instagram_export",
+        "dataTypes": [
+          "saved_posts"
+        ],
+        "totalItems": 50,
+        "dataStructure": {
+          "saved_posts": {
+            "count": 50,
+            "s3Key": "uploads/248e347a-79d4-4eeb-9daf-e105c3b1c73f/saved_posts.json",
+            "extractedAt": "2025-08-03T18:33:33.060Z"
+          }
+        }
+      },
+      "model": {
+        "id": "llama-8b",
+        "provider": "llama",
+        "model": "meta.llama3-1-8b-instruct-v1:0",
+        "temperature": 0.7,
+        "family": "Llama"
+      },
+      "payload_size": 7416,
+      "duration_seconds": 0.89,
+      "test_type": "full_dataset",
+      "content_id": "248e347a-79d4-4eeb-9daf-e105c3b1c73f"
+    }
+  ],
+  "performance_metrics": {
+    "avg_response_time": 0.81,
+    "min_response_time": 0.4,
+    "max_response_time": 1.37,
+    "avg_payload_size": 3055,
+    "min_payload_size": 869,
+    "max_payload_size": 7416
+  },
+  "model_family_success_rates": {
+    "Claude": {
+      "success_rate": 100.0,
+      "successful": 3,
+      "total": 3
+    },
+    "Nova": {
+      "success_rate": 100.0,
+      "successful": 3,
+      "total": 3
+    },
+    "Llama": {
+      "success_rate": 100.0,
+      "successful": 3,
+      "total": 3
+    }
+  },
+  "preference_validation": {
+    "total_validations": 9,
+    "successful_validations": 9,
+    "validation_rate": 100.0
+  }
+}
