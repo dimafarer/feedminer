@@ -105,8 +105,7 @@ FeedMiner is a serverless AWS application that processes exported saved content 
 ./scripts/setup.sh
 source feedminer-env/bin/activate  # ALWAYS activate first
 
-# Build and validate (with required flags)
-sam build --lint
+# validate (with required flags)
 sam validate --lint
 ```
 
@@ -154,7 +153,7 @@ source feedminer-env/bin/activate
 # Deploy with Anthropic API (no changeset confirmation)
 ./scripts/deploy.sh dev your-anthropic-key
 # OR manually:
-sam build --lint
+sam build
 sam deploy --no-confirm-changeset --parameter-overrides AnthropicApiKey=your-key
 ```
 
@@ -167,7 +166,7 @@ Frontend is automatically deployed via AWS Amplify when changes are pushed to th
 ```bash
 # MANDATORY sequence before any commits
 source feedminer-env/bin/activate  # 1. Activate environment
-sam build --lint                   # 2. Build with linting
+sam build                          # 2. Build with linting
 pytest tests/unit/ -v              # 3. Run tests
 ```
 
@@ -260,10 +259,9 @@ npm run test       # Run tests
 ### When Modifying Infrastructure (Python Backend)
 1. **ALWAYS activate virtual environment first**: `source feedminer-env/bin/activate`
 2. Update `template.yaml` with proper parameterization
-3. Build with linting: `sam build --lint`
-4. Deploy without confirmation: `sam deploy --no-confirm-changeset`
-5. Maintain environment-specific deployment capability
-6. Follow AWS Well-Architected Framework principles
+3. Deploy without confirmation: `sam deploy --no-confirm-changeset`
+4. Maintain environment-specific deployment capability
+5. Follow AWS Well-Architected Framework principles
 
 ## AI Analysis Capabilities
 
