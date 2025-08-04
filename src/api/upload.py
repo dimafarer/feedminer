@@ -67,17 +67,22 @@ def handler(event, context):
         
         # Create DynamoDB record
         table = dynamodb.Table(content_table)
-        table.put_item(
-            Item={
-                'contentId': content_id,
-                'userId': body.get('user_id', 'anonymous'),
-                'type': body.get('type', 'unknown'),
-                'status': 'uploaded',
-                'createdAt': datetime.now().isoformat(),
-                's3Key': s3_key,
-                'metadata': body.get('metadata', {})
-            }
-        )
+        item = {
+            'contentId': content_id,
+            'userId': body.get('user_id', 'anonymous'),
+            'type': body.get('type', 'unknown'),
+            'status': 'uploaded',
+            'createdAt': datetime.now().isoformat(),
+            's3Key': s3_key,
+            'metadata': body.get('metadata', {})
+        }
+        
+        # Add model preference if provided
+        if 'modelPreference' in body:
+            item['modelPreference'] = body['modelPreference']
+            print(f"Model preference stored: {body['modelPreference']}")
+        
+        table.put_item(Item=item)
         
         print(f"Content uploaded successfully: {content_id}")
         
