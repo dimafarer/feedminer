@@ -13,7 +13,22 @@ import zipfile
 import io
 import re
 from datetime import datetime
+from decimal import Decimal
 from typing import Dict, List, Any, Optional, Tuple
+
+
+def convert_floats_to_decimal(obj):
+    """
+    Recursively convert float values to Decimal for DynamoDB compatibility.
+    """
+    if isinstance(obj, dict):
+        return {k: convert_floats_to_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_floats_to_decimal(item) for item in obj]
+    elif isinstance(obj, float):
+        return Decimal(str(obj))
+    else:
+        return obj
 
 def handler(event, context):
     """
@@ -193,24 +208,29 @@ def process_consolidated_instagram_data(body: Dict, content_id: str, user_id: st
     
     # Create enhanced DynamoDB record
     table = dynamodb.Table(content_table)
-    table.put_item(
-        Item={
-            'contentId': content_id,
-            'userId': user_id,
-            'type': 'instagram_export',
-            'status': 'uploaded',
-            'createdAt': datetime.now().isoformat(),
-            's3Key': consolidated_s3_key,
-            'dataStructure': data_structure,
-            'metadata': {
-                'exportFolder': export_folder,
-                'totalFiles': len(data_types),
-                'totalDataPoints': total_items,
-                'analyzableTypes': data_types,
-                'extractedAt': extracted_at
-            }
+    item = {
+        'contentId': content_id,
+        'userId': user_id,
+        'type': 'instagram_export',
+        'status': 'uploaded',
+        'createdAt': datetime.now().isoformat(),
+        's3Key': consolidated_s3_key,
+        'dataStructure': data_structure,
+        'metadata': {
+            'exportFolder': export_folder,
+            'totalFiles': len(data_types),
+            'totalDataPoints': total_items,
+            'analyzableTypes': data_types,
+            'extractedAt': extracted_at
         }
-    )
+    }
+    
+    # Add model preference if provided (convert floats to Decimals for DynamoDB)
+    if 'modelPreference' in body:
+        item['modelPreference'] = convert_floats_to_decimal(body['modelPreference'])
+        print(f"Model preference stored for multi-upload: {body['modelPreference']}")
+    
+    table.put_item(Item=item)
     
     print(f"Consolidated Instagram export uploaded: {content_id} with {total_items} total items")
     
@@ -269,21 +289,26 @@ def process_single_instagram_data_type(body: Dict, content_id: str, user_id: str
     
     # Create DynamoDB record
     table = dynamodb.Table(content_table)
-    table.put_item(
-        Item={
-            'contentId': content_id,
-            'userId': user_id,
-            'type': f'instagram_{data_type}',
-            'status': 'uploaded',
-            'createdAt': datetime.now().isoformat(),
-            's3Key': s3_key,
-            'metadata': {
-                'dataType': data_type,
-                'itemCount': item_count,
-                'extractedFromZip': True
-            }
+    item = {
+        'contentId': content_id,
+        'userId': user_id,
+        'type': f'instagram_{data_type}',
+        'status': 'uploaded',
+        'createdAt': datetime.now().isoformat(),
+        's3Key': s3_key,
+        'metadata': {
+            'dataType': data_type,
+            'itemCount': item_count,
+            'extractedFromZip': True
         }
-    )
+    }
+    
+    # Add model preference if provided
+    if 'modelPreference' in body:
+        item['modelPreference'] = body['modelPreference']
+        print(f"Model preference stored for single data type upload: {body['modelPreference']}")
+    
+    table.put_item(Item=item)
     
     print(f"Single {data_type} uploaded: {content_id} with {item_count} items")
     

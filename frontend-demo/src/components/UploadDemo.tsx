@@ -2,7 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import JSZip from 'jszip';
 import { sampleInstagramData } from '../data/analysisResults';
+import { smallTestDataset } from '../data/smallTestDataset';
 import { useFeedMinerAPI } from '../services/feedminerApi';
+import ModelSelector, { type ModelInfo, AVAILABLE_MODELS } from './ModelSelector';
 
 interface UploadDemoProps {
   onUploadComplete: (contentId?: string) => void;
@@ -34,6 +36,9 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
   const [zipAnalysis, setZipAnalysis] = useState<ZipAnalysis | null>(null);
   const [selectedDataTypes, setSelectedDataTypes] = useState<string[]>(['saved_posts']);
   const [extractionProgress, setExtractionProgress] = useState(0);
+  const [selectedModel, setSelectedModel] = useState<ModelInfo>(
+    AVAILABLE_MODELS.find(m => m.recommended) || AVAILABLE_MODELS[2] // Default to Nova Micro
+  );
 
   const api = useFeedMinerAPI();
 
@@ -207,6 +212,37 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
     setUploadedFile(new File([JSON.stringify(sampleInstagramData, null, 2)], 'sample-instagram-data.json', { type: 'application/json' }));
   };
 
+  const handleUseSmallTestData = () => {
+    setStep('preview');
+    setUploadedFile(new File([JSON.stringify(smallTestDataset, null, 2)], 'small-test-data.json', { type: 'application/json' }));
+    // Set up for multi-upload test
+    setZipAnalysis({
+      isInstagramExport: true,
+      exportFolder: smallTestDataset.exportInfo.exportFolder,
+      availableDataTypes: [
+        {
+          id: 'saved_posts',
+          name: 'Saved Posts',
+          description: 'Posts you saved on Instagram',
+          filePath: 'saved_posts.json',
+          found: true,
+          count: 3
+        },
+        {
+          id: 'liked_posts',
+          name: 'Liked Posts', 
+          description: 'Posts you liked on Instagram',
+          filePath: 'liked_posts.json',
+          found: true,
+          count: 2
+        }
+      ],
+      totalFiles: 2,
+      estimatedSize: '2.1 KB'
+    });
+    setSelectedDataTypes(['saved_posts', 'liked_posts']);
+  };
+
   const extractDataFromZip = async (file: File, dataTypeId: string): Promise<any> => {
     if (!zipAnalysis || !zipAnalysis.isInstagramExport) {
       throw new Error('Invalid Instagram export');
@@ -239,6 +275,10 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
       if (uploadedFile && uploadedFile.name.includes('sample')) {
         // Use sample data
         contentToUpload = sampleInstagramData;
+      } else if (uploadedFile && uploadedFile.name.includes('small-test-data')) {
+        // Use small test data - already in the right format
+        contentToUpload = smallTestDataset;
+        uploadType = 'instagram_export';
       } else if (uploadedFile) {
         // Check if it's a ZIP file
         if (uploadedFile.type === 'application/zip' || uploadedFile.name.endsWith('.zip')) {
@@ -289,7 +329,12 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
       const response = await api.uploadContent(
         contentToUpload, 
         uploadType, 
-        'demo-user'
+        'demo-user',
+        {
+          provider: selectedModel.provider,
+          model: selectedModel.model,
+          temperature: 0.7
+        }
       );
       
       console.log('Upload successful:', response);
@@ -307,6 +352,7 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
     setUploadedFile(null);
     setZipAnalysis(null);
     setSelectedDataTypes(['saved_posts']);
+    setSelectedModel(AVAILABLE_MODELS.find(m => m.recommended) || AVAILABLE_MODELS[2]);
     setStep('upload');
     setIsProcessing(false);
   };
@@ -449,15 +495,25 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
                   <span className="text-gray-500 text-sm">or</span>
                   <div className="h-px bg-gray-300 flex-1"></div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
                   <button 
                     onClick={handleUseSampleData}
                     className="btn-secondary"
                   >
                     Use Sample Data for Demo
                   </button>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 mt-1">
                     See how FeedMiner works with real analysis results (177 Instagram saves)
+                  </p>
+                  
+                  <button 
+                    onClick={handleUseSmallTestData}
+                    className="btn-secondary bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    🧪 Use Small Test Dataset
+                  </button>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Debug multi-upload with minimal data (5 items, 2KB) - Perfect for testing!
                   </p>
                 </div>
               </div>
@@ -676,6 +732,15 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
               )}
             </div>
 
+            {/* Model Selection */}
+            <div className="card">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                showDetails={true}
+              />
+            </div>
+
             {/* Analysis Features */}
             <div className="card">
               <h3 className="text-xl font-semibold mb-4">🔍 Analysis Features</h3>
@@ -747,10 +812,17 @@ const UploadDemo: React.FC<UploadDemoProps> = ({ onUploadComplete, onBack }) => 
               </h2>
               <p className="text-lg text-gray-600">
                 {isProcessing 
-                  ? 'AI is analyzing your Instagram behavior patterns and generating personalized goals.'
+                  ? `${selectedModel.name} is analyzing your Instagram behavior patterns and generating personalized goals.`
                   : 'Your analysis is ready! Redirecting to results...'
                 }
               </p>
+              
+              {isProcessing && (
+                <div className="text-sm text-gray-500 space-y-1">
+                  <p>Using: {selectedModel.name} ({selectedModel.family})</p>
+                  <p>Expected processing time: ~{selectedModel.avgResponseTime}</p>
+                </div>
+              )}
             </div>
 
             {isProcessing && (

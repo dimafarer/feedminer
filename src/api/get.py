@@ -81,7 +81,8 @@ def handler(event, context):
             'createdAt': content_item.get('createdAt'),
             'userId': content_item.get('userId'),
             'metadata': content_item.get('metadata', {}),
-            'analysis': content_item.get('analysis')
+            'analysis': content_item.get('analysis'),
+            'modelPreference': content_item.get('modelPreference')
         }
         
         if include_raw and 's3Key' in content_item:

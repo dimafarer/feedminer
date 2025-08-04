@@ -101,8 +101,13 @@ class FeedMinerAPI {
     this.websocketUrl = WEBSOCKET_URL;
   }
 
-  // Upload content for analysis
-  async uploadContent(content: any, type: string = 'instagram_saved', userId: string = 'demo-user'): Promise<UploadResponse> {
+  // Upload content for analysis with optional model selection
+  async uploadContent(
+    content: any, 
+    type: string = 'instagram_saved', 
+    userId: string = 'demo-user',
+    modelPreference?: { provider: string; model: string; temperature?: number }
+  ): Promise<UploadResponse> {
     try {
       // Determine which endpoint to use based on content type
       const isMultiFileUpload = type === 'instagram_export' || (content.exportInfo && content.exportInfo.dataTypes);
@@ -113,6 +118,11 @@ class FeedMinerAPI {
         type,
         user_id: userId,
       };
+
+      // Add model preference if provided
+      if (modelPreference) {
+        requestBody.modelPreference = modelPreference;
+      }
       
       if (isMultiFileUpload) {
         // For multi-file uploads, include dataTypes and spread content
