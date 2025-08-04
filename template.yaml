@@ -521,6 +521,79 @@ Resources:
         - Key: "MonitoringLevel"
           Value: !Ref MonitoringLevel
 
+  # Multi-model analysis results storage
+  AnalysisTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-analyses-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: contentId
+          AttributeType: S
+        - AttributeName: analysisId
+          AttributeType: S
+        - AttributeName: modelProvider
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contentId
+          KeyType: HASH
+        - AttributeName: analysisId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ModelProviderIndex
+          KeySchema:
+            - AttributeName: modelProvider
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      # Resource-Specific Cost Tracking Tags
+      Tags:
+        # Inherit base tags via CloudFormation
+        - Key: "Project"
+          Value: !Ref ProjectName
+        - Key: "Owner"
+          Value: !Ref ResourceOwner
+        - Key: "Team"
+          Value: !Ref TeamName
+        - Key: "CostCenter"
+          Value: !Ref CostCenter
+        - Key: "Environment"
+          Value: !Ref Environment
+        - Key: "BusinessUnit"
+          Value: !Ref BusinessUnit
+        - Key: "Application"
+          Value: "feedMiner"
+        # Resource-specific tags
+        - Key: "Purpose"
+          Value: "Multi-Model-Analysis-Storage"
+        - Key: "Component"
+          Value: "Analysis-DataStore"
+        - Key: "DataType"
+          Value: "AI-Analysis-Results"
+        - Key: "Technology"
+          Value: "DynamoDB"
+        - Key: "CustomerImpact"
+          Value: "High"  # Core analysis functionality
+        - Key: "BackupSchedule"
+          Value: "Point-in-Time-Recovery"
+        - Key: "RetentionPeriod"
+          Value: "7-days-TTL"  # Cached analysis results
+        - Key: "DataClassification"
+          Value: !Ref DataClassification
+        - Key: "MonitoringLevel"
+          Value: "Detailed"  # Analysis performance tracking
+        - Key: "BusinessValue"
+          Value: !Ref BusinessValue
+
   # S3 bucket for content storage
   ContentBucket:
     Type: AWS::S3::Bucket
@@ -927,9 +1000,12 @@ Resources:
         Variables:
           CONTENT_TABLE: !Ref ContentTable
           CONTENT_BUCKET: !Ref ContentBucket
+          ANALYSIS_TABLE: !Ref AnalysisTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ContentTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AnalysisTable
         - Statement:
             Effect: Allow
             Action:
@@ -943,6 +1019,61 @@ Resources:
             RestApiId: !Ref FeedMinerApi
             Path: /content/{contentId}
             Method: GET
+
+  # Content reprocessing with different models
+  ContentReprocessFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-content-reprocess-${Environment}"
+      CodeUri: src/api/
+      Handler: reprocess.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          CONTENT_TABLE: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+          ANALYSIS_TABLE: !Ref AnalysisTable
+          JOBS_TABLE: !Ref JobsTable
+          CONNECTIONS_TABLE: !Ref ConnectionsTable
+          WEBSOCKET_API_ENDPOINT: !If 
+            - ShouldCreateWebSocket
+            - !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+            - "DISABLED"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContentTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AnalysisTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub "arn:aws:s3:::${AWS::StackName}-content-${Environment}-${AWS::AccountId}/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource: !If 
+              - ShouldCreateWebSocket
+              - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/*"
+              - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:disabled/*/*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: "*"
+      Events:
+        ReprocessApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FeedMinerApi
+            Path: /content/{contentId}/reprocess
+            Method: POST
 
   # Job management
   JobStatusFunction:
@@ -1150,3 +1281,9 @@ Outputs:
     Value: !Ref JobsTable
     Export:
       Name: !Sub "${AWS::StackName}-JobsTable-${Environment}"
+
+  AnalysisTableName:
+    Description: DynamoDB table for multi-model analysis results
+    Value: !Ref AnalysisTable
+    Export:
+      Name: !Sub "${AWS::StackName}-AnalysisTable-${Environment}"

@@ -92,6 +92,45 @@ export interface ComparisonResponse {
   };
 }
 
+// Multi-Model Analysis Reprocessing Types (Phase 1)
+export interface ReprocessRequest {
+  modelProvider: 'anthropic' | 'bedrock' | 'nova' | 'llama';
+  modelName: string;
+  temperature?: number;
+  force?: boolean; // Skip cache check
+}
+
+export interface ReprocessResponse {
+  message: string;
+  jobId: string;
+  analysisId: string;
+  estimates: {
+    estimated_cost_usd: number;
+    estimated_time_seconds: number;
+    estimated_tokens: number;
+    confidence: string;
+  };
+  analysis?: any;
+  cached?: boolean;
+}
+
+export interface AnalysisProgress {
+  type: 'analysis_started' | 'analysis_progress' | 'analysis_complete' | 'analysis_error';
+  contentId: string;
+  jobId: string;
+  analysisId?: string;
+  data: {
+    progress?: number; // 0-100
+    currentStep?: string;
+    estimatedTimeRemaining?: number;
+    result?: any;
+    error?: string;
+    modelProvider?: string;
+    modelName?: string;
+    estimates?: any;
+  };
+}
+
 class FeedMinerAPI {
   private baseUrl: string;
   private websocketUrl: string;
@@ -332,6 +371,71 @@ class FeedMinerAPI {
       prompt: prompt || 'Hello! This is a test of Bedrock integration. Please respond with "Bedrock integration successful!"'
     });
   }
+
+  // Multi-Model Analysis Reprocessing Methods (Phase 1)
+  
+  // Reprocess content with different model
+  async reprocessContent(contentId: string, request: ReprocessRequest): Promise<ReprocessResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/content/${contentId}/reprocess`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Reprocessing failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Reprocessing error:', error);
+      throw error;
+    }
+  }
+
+  // Get all analyses for a content item
+  async getAnalysisHistory(contentId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/content/${contentId}/analyses`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Get analysis history failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get analysis history error:', error);
+      throw error;
+    }
+  }
+
+  // Cancel reprocessing job
+  async cancelReprocessing(contentId: string, jobId: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${jobId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contentId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Cancel reprocessing failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Cancel reprocessing error:', error);
+      throw error;
+    }
+  }
 }
 
 // Create singleton instance
@@ -350,6 +454,10 @@ export const useFeedMinerAPI = () => {
     analyzeWithProvider: feedminerApi.analyzeWithProvider.bind(feedminerApi),
     compareProviders: feedminerApi.compareProviders.bind(feedminerApi),
     testBedrockIntegration: feedminerApi.testBedrockIntegration.bind(feedminerApi),
+    // v0.4.0+ Multi-Model Analysis Reprocessing
+    reprocessContent: feedminerApi.reprocessContent.bind(feedminerApi),
+    getAnalysisHistory: feedminerApi.getAnalysisHistory.bind(feedminerApi),
+    cancelReprocessing: feedminerApi.cancelReprocessing.bind(feedminerApi),
   };
 };
 
