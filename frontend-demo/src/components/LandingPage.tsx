@@ -19,28 +19,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartDemo, onViewDemo, onMo
               </div>
               <h1 className="text-2xl font-bold text-gray-900">FeedMiner</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {onModelTesting && (
                 <button 
                   onClick={onModelTesting}
-                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 flex-shrink-0"
                 >
                   <span>🤖</span>
-                  <span>AI Models</span>
+                  <span className="hidden sm:inline">AI Models</span>
+                  <span className="sm:hidden">AI</span>
                   <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">v0.2.0</span>
                 </button>
               )}
               <button 
                 onClick={onViewDemo}
-                className="text-gray-600 hover:text-gray-900 font-medium"
+                className="text-gray-600 hover:text-gray-900 font-medium flex-shrink-0 hidden sm:block"
               >
                 View Demo
               </button>
               <button 
                 onClick={onStartDemo}
-                className="btn-primary"
+                className="btn-primary flex-shrink-0"
               >
-                Try Demo
+                <span className="hidden sm:inline">Try Demo</span>
+                <span className="sm:hidden">Demo</span>
               </button>
             </div>
           </div>
