@@ -70,7 +70,7 @@ def estimate_processing_cost(model_provider: str, model_name: str, data_size: in
         'confidence': 'medium'  # Cost estimates are approximate
     }
 
-async def send_websocket_message(connections_table, websocket_client, user_id: str, message: Dict[str, Any]):
+def send_websocket_message(connections_table, websocket_client, user_id: str, message: Dict[str, Any]):
     """Send progress update via WebSocket."""
     try:
         # Get user connections
@@ -239,7 +239,7 @@ def handler(event, context):
         jobs_table.put_item(Item=job_item)
         
         # Send initial WebSocket notification
-        await send_websocket_message(connections_table, websocket_client, user_id, {
+        send_websocket_message(connections_table, websocket_client, user_id, {
             'type': 'analysis_started',
             'contentId': content_id,
             'jobId': job_id,
@@ -263,7 +263,7 @@ def handler(event, context):
             'model_info': {
                 'provider': model_provider,
                 'model': model_name,
-                'temperature': temperature
+                'temperature': Decimal(str(temperature))
             }
         }
         
@@ -275,12 +275,12 @@ def handler(event, context):
             'modelProvider': model_provider,
             'modelName': model_name,
             'analysis': mock_analysis,
-            'metadata': {
+            'metadata': convert_floats_to_decimal({
                 'processingTime': estimates['estimated_time_seconds'],
                 'estimatedCost': estimates['estimated_cost_usd'],
                 'createdAt': datetime.now().isoformat(),
-                'temperature': Decimal(str(temperature))
-            },
+                'temperature': temperature
+            }),
             'ttl': ttl,
             'createdAt': datetime.now().isoformat()
         }
@@ -300,7 +300,7 @@ def handler(event, context):
         )
         
         # Send completion WebSocket notification
-        await send_websocket_message(connections_table, websocket_client, user_id, {
+        send_websocket_message(connections_table, websocket_client, user_id, {
             'type': 'analysis_complete',
             'contentId': content_id,
             'jobId': job_id,

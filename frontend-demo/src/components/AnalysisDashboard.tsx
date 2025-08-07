@@ -5,7 +5,7 @@ import BehavioralPatterns from './BehavioralPatterns';
 import InterestChart from './InterestChart';
 import { AVAILABLE_MODELS, type ModelInfo } from './ModelSelector';
 import { useFeedMinerAPI } from '../services/feedminerApi';
-import type { ReprocessRequest, AnalysisProgress } from '../services/feedminerApi';
+import type { ReprocessRequest } from '../services/feedminerApi';
 
 interface AnalysisDashboardProps {
   results: AnalysisResult;
@@ -22,7 +22,7 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
   const [reprocessingProgress, setReprocessingProgress] = useState(0);
   const [reprocessingStep, setReprocessingStep] = useState('');
   const [reprocessingError, setReprocessingError] = useState<string | null>(null);
-  const [, setWebsocket] = useState<WebSocket | null>(null);
+  // const [, setWebsocket] = useState<WebSocket | null>(null); // Disabled for Phase 1
   
   // API hook
   const api = useFeedMinerAPI();
@@ -32,61 +32,74 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
     model.provider === 'anthropic' || model.provider === 'bedrock'
   );
 
-  // Initialize WebSocket connection for real-time progress
+  // Initialize WebSocket connection for real-time progress (Phase 1: Disabled for stability)
+  // TODO: Re-enable in Phase 2 after WebSocket infrastructure is stable
+  /*
   useEffect(() => {
-    const ws = api.createWebSocketConnection(
-      (message: AnalysisProgress) => {
-        console.log('Analysis progress:', message);
-        
-        if (message.contentId === results.contentId) {
-          switch (message.type) {
-            case 'analysis_started':
-              setIsReprocessing(true);
-              setReprocessingProgress(0);
-              setReprocessingStep('Analysis started...');
-              setReprocessingError(null);
-              break;
-              
-            case 'analysis_progress':
-              if (message.data.progress !== undefined) {
-                setReprocessingProgress(message.data.progress);
-              }
-              if (message.data.currentStep) {
-                setReprocessingStep(message.data.currentStep);
-              }
-              break;
-              
-            case 'analysis_complete':
-              setIsReprocessing(false);
-              setReprocessingProgress(100);
-              setReprocessingStep('Analysis complete!');
-              setTimeout(() => {
-                setShowModelSelector(false);
-                // TODO: Refresh analysis results with new data
-                console.log('New analysis result:', message.data.result);
-              }, 1000);
-              break;
-              
-            case 'analysis_error':
-              setIsReprocessing(false);
-              setReprocessingError(message.data.error || 'Analysis failed');
-              setReprocessingStep('Error occurred');
-              break;
+    // Only create WebSocket if reprocessing is active
+    if (!isReprocessing) {
+      return;
+    }
+
+    console.log('Creating WebSocket connection for reprocessing...');
+    
+    try {
+      const ws = api.createWebSocketConnection(
+        (message: AnalysisProgress) => {
+          console.log('Analysis progress:', message);
+          
+          if (message.contentId === results.contentId) {
+            switch (message.type) {
+              case 'analysis_started':
+                setReprocessingProgress(0);
+                setReprocessingStep('Analysis started...');
+                setReprocessingError(null);
+                break;
+                
+              case 'analysis_progress':
+                if (message.data.progress !== undefined) {
+                  setReprocessingProgress(message.data.progress);
+                }
+                if (message.data.currentStep) {
+                  setReprocessingStep(message.data.currentStep);
+                }
+                break;
+                
+              case 'analysis_complete':
+                setIsReprocessing(false);
+                setReprocessingProgress(100);
+                setReprocessingStep('Analysis complete!');
+                setTimeout(() => {
+                  setShowModelSelector(false);
+                  // TODO: Refresh analysis results with new data
+                  console.log('New analysis result:', message.data.result);
+                }, 1000);
+                break;
+                
+              case 'analysis_error':
+                setIsReprocessing(false);
+                setReprocessingError(message.data.error || 'Analysis failed');
+                setReprocessingStep('Error occurred');
+                break;
+            }
           }
+        },
+        (error) => {
+          console.error('WebSocket error:', error);
         }
-      },
-      (error) => {
-        console.error('WebSocket error:', error);
-        setReprocessingError('Connection error. Please try again.');
-      }
-    );
-    
-    setWebsocket(ws);
-    
-    return () => {
-      ws.close();
-    };
-  }, [results.contentId, api]);
+      );
+      
+      setWebsocket(ws);
+      
+      return () => {
+        console.log('Closing WebSocket connection');
+        ws.close();
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+    }
+  }, [isReprocessing, results.contentId]);
+  */
 
   // Initialize current model (detect from existing analysis)
   useEffect(() => {
@@ -97,7 +110,7 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
     }
   }, [currentModel, PHASE_1_MODELS]);
 
-  // Handle model reprocessing
+  // Handle model reprocessing (Phase 1: Using polling instead of WebSocket)
   const handleReprocessing = async (selectedModel: ModelInfo) => {
     try {
       setIsReprocessing(true);
@@ -112,9 +125,11 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
         force: false // Use cache if available
       };
 
+      console.log('Starting reprocessing with:', selectedModel.name);
+      
       const response = await api.reprocessContent(results.contentId, request);
       
-      console.log('Reprocessing started:', response);
+      console.log('Reprocessing response:', response);
       
       // Update current model
       setCurrentModel(selectedModel);
@@ -127,7 +142,34 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
         setTimeout(() => {
           setShowModelSelector(false);
         }, 1000);
+        return;
       }
+      
+      // Simulate progress for Phase 1 (replace with real progress in Phase 2)
+      setReprocessingStep('Processing with ' + selectedModel.name + '...');
+      
+      // Simple progress simulation
+      const progressSteps = [
+        { progress: 20, step: 'Analyzing content structure...' },
+        { progress: 40, step: 'Applying AI model...' },
+        { progress: 60, step: 'Generating insights...' },
+        { progress: 80, step: 'Finalizing analysis...' },
+        { progress: 100, step: 'Complete!' }
+      ];
+      
+      for (let i = 0; i < progressSteps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+        const step = progressSteps[i];
+        setReprocessingProgress(step.progress);
+        setReprocessingStep(step.step);
+      }
+      
+      // Finish processing
+      setIsReprocessing(false);
+      setTimeout(() => {
+        setShowModelSelector(false);
+        // TODO: Refresh with actual results from API
+      }, 1000);
       
     } catch (error) {
       console.error('Reprocessing failed:', error);
@@ -593,9 +635,12 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ results, onBack }
                 <p className="text-sm text-gray-600 mt-2">{reprocessingStep}</p>
               </div>
               
-              <p className="text-xs text-gray-500">
-                This usually takes 15-30 seconds depending on the model and data size.
-              </p>
+              <div className="text-xs text-gray-500 space-y-1">
+                <p>This usually takes 15-30 seconds depending on the model and data size.</p>
+                <p className="bg-blue-50 text-blue-700 p-2 rounded">
+                  <strong>Phase 1:</strong> Using simulated progress. Real-time WebSocket updates will be available in Phase 2.
+                </p>
+              </div>
             </div>
           </div>
         </div>

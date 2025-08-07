@@ -418,7 +418,7 @@ class FeedMinerAPI {
   }
 
   // Cancel reprocessing job
-  async cancelReprocessing(contentId: string, jobId: string): Promise<void> {
+  async cancelReprocessing(contentId: string, jobId: string): Promise<{jobId: string, status: string, message: string}> {
     try {
       const response = await fetch(`${this.baseUrl}/jobs/${jobId}/cancel`, {
         method: 'POST',
@@ -431,6 +431,8 @@ class FeedMinerAPI {
       if (!response.ok) {
         throw new Error(`Cancel reprocessing failed: ${response.statusText}`);
       }
+
+      return await response.json();
     } catch (error) {
       console.error('Cancel reprocessing error:', error);
       throw error;
