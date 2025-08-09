@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Connection Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #1e1e1e; color: #fff; }
+        .log { background: #2d2d2d; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button { padding: 10px 20px; margin: 5px; font-size: 14px; cursor: pointer; }
+        #status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Connection Test</h1>
+    <p>Testing: <strong>wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev</strong></p>
+    
+    <button onclick="testConnection()">Start Test</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <div id="status"></div>
+    <div id="log" class="log"></div>
+
+    <script>
+        const WEBSOCKET_URL = 'wss://yzzspgrevg.execute-api.us-west-2.amazonaws.com/dev';
+        let ws = null;
+        let testStartTime = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEl = document.getElementById('log');
+            logEl.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function setStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = type;
+            statusEl.style.background = type === 'error' ? '#7f1d1d' : 
+                                      type === 'success' ? '#14532d' : 
+                                      type === 'warning' ? '#7c2d12' : '#1e3a8a';
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            setStatus('Log cleared', 'info');
+        }
+        
+        function testConnection() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('Closing existing connection...', 'warning');
+                ws.close();
+            }
+            
+            log('🔄 Starting WebSocket connection test...', 'info');
+            setStatus('Testing connection...', 'info');
+            testStartTime = Date.now();
+            
+            try {
+                ws = new WebSocket(WEBSOCKET_URL);
+                
+                // Connection timeout
+                const timeout = setTimeout(() => {
+                    if (ws.readyState === WebSocket.CONNECTING) {
+                        log('❌ Connection timeout after 10 seconds', 'error');
+                        setStatus('Connection timeout', 'error');
+                        ws.close();
+                    }
+                }, 10000);
+                
+                ws.onopen = function(event) {
+                    clearTimeout(timeout);
+                    const connectionTime = Date.now() - testStartTime;
+                    log(`✅ WebSocket connection established in ${connectionTime}ms`, 'success');
+                    setStatus(`Connected in ${connectionTime}ms`, 'success');
+                    
+                    // Test sending a message
+                    const testMessage = {
+                        action: 'test',
+                        message: 'Connection test from browser',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    log(`📤 Sending test message: ${JSON.stringify(testMessage)}`, 'info');
+                    ws.send(JSON.stringify(testMessage));
+                    
+                    // Auto-close after testing
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            log('✅ Connection stable, closing gracefully', 'success');
+                            ws.close();
+                        }
+                    }, 5000);
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const message = JSON.parse(event.data);
+                        log(`📥 Received JSON: ${JSON.stringify(message)}`, 'success');
+                    } catch (err) {
+                        log(`📥 Received text: ${event.data}`, 'info');
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    clearTimeout(timeout);
+                    const totalTime = Date.now() - testStartTime;
+                    log(`🔌 Connection closed after ${totalTime}ms`, 'warning');
+                    log(`   Code: ${event.code}`, 'warning');
+                    log(`   Reason: ${event.reason || 'No reason provided'}`, 'warning');
+                    log(`   Clean close: ${event.wasClean}`, 'warning');
+                    
+                    if (event.wasClean) {
+                        setStatus(`Test completed successfully`, 'success');
+                    } else {
+                        setStatus(`Connection closed unexpectedly (${event.code})`, 'warning');
+                    }
+                };
+                
+                ws.onerror = function(event) {
+                    clearTimeout(timeout);
+                    const errorTime = Date.now() - testStartTime;
+                    log(`❌ WebSocket error after ${errorTime}ms`, 'error');
+                    log(`   Event: ${JSON.stringify(event)}`, 'error');
+                    setStatus('Connection failed', 'error');
+                    
+                    // Analysis
+                    if (ws.readyState === WebSocket.CONNECTING) {
+                        log('🔍 Analysis: Connection failed to establish', 'error');
+                        log('   Possible causes:', 'error');
+                        log('   - Invalid WebSocket URL', 'error');
+                        log('   - Server not responding', 'error');
+                        log('   - Network connectivity issues', 'error');
+                        log('   - CORS or authentication issues', 'error');
+                    }
+                };
+                
+            } catch (err) {
+                log(`❌ Failed to create WebSocket: ${err.message}`, 'error');
+                setStatus('Failed to create WebSocket', 'error');
+            }
+        }
+        
+        // Auto-start test when page loads
+        window.onload = function() {
+            log('🚀 WebSocket test page loaded', 'info');
+            log('Click "Start Test" to test the connection', 'info');
+        };
+    </script>
+</body>
+</html>

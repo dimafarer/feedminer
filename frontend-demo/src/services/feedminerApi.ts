@@ -131,6 +131,17 @@ export interface AnalysisProgress {
   };
 }
 
+// New interface for streaming reasoning steps
+export interface ReasoningStep {
+  type: 'reasoning_step';
+  content_id: string;
+  step: string;
+  reasoning: string;
+  progress: number; // 0.0 to 1.0
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
 class FeedMinerAPI {
   private baseUrl: string;
   private websocketUrl: string;

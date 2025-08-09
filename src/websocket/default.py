@@ -48,6 +48,14 @@ def handler(event, context):
                 'message': 'Starting content analysis...',
                 'content_id': body.get('content_id')
             }
+        elif action == 'stream_reasoning':
+            # Handle streaming reasoning step
+            response_message = {
+                'type': 'reasoning_acknowledged',
+                'message': 'Reasoning stream registered',
+                'content_id': body.get('content_id'),
+                'connection_id': connection_id
+            }
         else:
             # Unknown action
             response_message = {

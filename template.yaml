@@ -1178,6 +1178,11 @@ Resources:
           CONTENT_TABLE: !Ref ContentTable
           JOBS_TABLE: !Ref JobsTable
           CONTENT_BUCKET: !Ref ContentBucket
+          CONNECTIONS_TABLE: !Ref ConnectionsTable
+          WEBSOCKET_API_ENDPOINT: !If 
+            - ShouldCreateWebSocket
+            - !Sub "${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+            - "DISABLED"
           # AI Provider Configuration
           PREFERRED_AI_PROVIDER: !Ref PrimaryAIProvider
           PREFERRED_AI_MODEL: !Ref PreferredAIModel
@@ -1187,10 +1192,20 @@ Resources:
             TableName: !Ref ContentTable
         - DynamoDBCrudPolicy:
             TableName: !Ref JobsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
         - S3ReadPolicy:
             BucketName: !Ref ContentBucket
         - S3WritePolicy:
             BucketName: !Ref ContentBucket
+        - !If
+            - ShouldCreateWebSocket
+            - Statement:
+                Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*"
+            - !Ref "AWS::NoValue"
         - Statement:
             Effect: Allow
             Action:

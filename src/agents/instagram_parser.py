@@ -24,6 +24,18 @@ from strands import Agent
 from strands.models.anthropic import AnthropicModel
 from pydantic import BaseModel, Field
 
+# Import WebSocket streaming utilities  
+try:
+    from websocket_stream import broadcast_reasoning_step
+except ImportError:
+    try:
+        from ..utils.websocket_stream import broadcast_reasoning_step
+    except ImportError:
+        # Fallback for when running directly
+        import sys
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+        from utils.websocket_stream import broadcast_reasoning_step
+
 
 class InstagramPost(BaseModel):
     """Structured representation of an Instagram post."""
@@ -114,47 +126,106 @@ class InstagramParserAgent:
         self.jobs_table_name = os.environ.get('JOBS_TABLE')
         self.content_bucket = os.environ.get('CONTENT_BUCKET')
     
-    async def parse_instagram_export(self, raw_data: Dict[str, Any]) -> InstagramAnalysisResult:
+    async def parse_instagram_export(self, raw_data: Dict[str, Any], content_id: str = None) -> InstagramAnalysisResult:
         """
         Parse Instagram saved content export and extract insights.
         
         Args:
             raw_data: Raw Instagram export data
+            content_id: Content ID for WebSocket streaming (optional)
             
         Returns:
             Structured analysis result
         """
+        # Stream initial reasoning step
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="data_extraction",
+                reasoning="Starting analysis by extracting Instagram posts from the raw export data...",
+                progress=0.1
+            )
+        
         # Extract posts from the raw data
         posts = self._extract_posts(raw_data)
+        
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="post_extraction_complete",
+                reasoning=f"Successfully extracted {len(posts)} posts from the export. Now analyzing content patterns and themes...",
+                progress=0.2
+            )
         
         # Create analysis prompt
         prompt = self._build_analysis_prompt(posts)
         
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="ai_analysis_starting",
+                reasoning="Preparing detailed analysis prompt for the AI model. Looking for behavioral patterns, content categories, and goal opportunities...",
+                progress=0.3
+            )
+        
         # Run analysis with structured output using Strands
         try:
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="ai_processing",
+                    reasoning="The AI model is now processing your content. Analyzing themes, interests, and behavioral patterns to generate personalized insights...",
+                    progress=0.5
+                )
+            
             # Use the agent's structured output method with correct parameters
             result = await self.agent.structured_output_async(
                 output_model=InstagramAnalysisResult,
                 prompt=prompt
             )
+            
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="analysis_complete",
+                    reasoning=f"Analysis complete! Found {len(result.categories)} content categories and {len(result.insights)} key insights about your interests and goals.",
+                    progress=1.0
+                )
+            
             return result
         except Exception as e:
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="analysis_error",
+                    reasoning=f"Analysis encountered an error: {str(e)}. This might be due to content format or AI processing issues.",
+                    progress=0.0
+                )
             print(f"🚨 CRITICAL ERROR: Strands structured output failed: {e}")
             raise Exception(f"AI analysis failed for Instagram content: {str(e)}") from e
     
-    async def parse_multi_type_instagram_export(self, raw_data: Dict[str, Any], export_info: Dict[str, Any]) -> InstagramAnalysisResult:
+    async def parse_multi_type_instagram_export(self, raw_data: Dict[str, Any], export_info: Dict[str, Any], content_id: str = None) -> InstagramAnalysisResult:
         """
         Parse multi-data-type Instagram export with consolidated analysis.
         
         Args:
             raw_data: Combined Instagram export data with multiple data types
             export_info: Export metadata including data types
+            content_id: Content ID for WebSocket streaming (optional)
             
         Returns:
             Structured analysis result combining all data types
         """
         # Extract data directly from root level (not from combined_data)
         data_types = export_info.get('dataTypes', [])
+        
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="multi_type_analysis_start",
+                reasoning=f"Starting comprehensive analysis of your Instagram data. Processing {len(data_types)} data types: {', '.join(data_types)}...",
+                progress=0.05
+            )
         
         print(f"Processing multi-type export with data types: {data_types}")
         print(f"Raw data keys: {list(raw_data.keys())}")
@@ -224,8 +295,27 @@ class InstagramParserAgent:
         
         print(f"🐛 DEBUG MODE: {'ENABLED' if debug_mode else 'DISABLED'} - Total items: {total_items}, Processing {sample_size_per_type} items per data type ({len(data_types)} types)")
         
-        for data_type in data_types:
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="data_sampling_strategy",
+                reasoning=f"Found {total_items} total items across all data types. Using smart sampling to analyze {sample_size_per_type} items per type for optimal analysis quality while managing processing time.",
+                progress=0.1
+            )
+        
+        current_progress = 0.1
+        progress_per_type = 0.5 / len(data_types)  # Allocate 50% of progress for data processing
+        
+        for i, data_type in enumerate(data_types):
             if data_type in raw_data:
+                if content_id:
+                    broadcast_reasoning_step(
+                        content_id=content_id,
+                        step=f"processing_{data_type}",
+                        reasoning=f"Now processing your {data_type.replace('_', ' ')} data ({i+1} of {len(data_types)}). Extracting behavioral patterns and interaction preferences...",
+                        progress=current_progress
+                    )
+                
                 if data_type == 'saved_posts':
                     saved_data = raw_data[data_type].get('saved_saved_media', [])
                     # Sample the data if it's too large
@@ -422,15 +512,41 @@ class InstagramParserAgent:
                         )
                         all_posts.append(post)
                     print(f"Processed {len(sampled_following_data)} of {len(raw_following_data)} {data_type} items")
+                
+                current_progress += progress_per_type
         
         print(f"Extracted {len(all_posts)} sampled posts from {len(data_types)} data types for analysis")
         self._log_memory_usage("AFTER_EXTRACTION")
         
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="data_extraction_complete",
+                reasoning=f"Data extraction complete! Successfully processed {len(all_posts)} items across {len(data_types)} data types. Now preparing for AI analysis to identify your behavioral patterns and goals.",
+                progress=0.6
+            )
+        
         # Create enhanced analysis prompt for multi-type data
         prompt = self._build_multi_type_analysis_prompt(all_posts, data_types, export_info)
         
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="ai_analysis_preparation",
+                reasoning="Preparing comprehensive analysis prompt that combines all your Instagram interactions. The AI will analyze cross-platform patterns between saved posts, likes, comments, and following behaviors.",
+                progress=0.7
+            )
+        
         # Run analysis with structured output using Strands
         try:
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="ai_deep_analysis",
+                    reasoning="AI is now performing deep behavioral analysis across all your Instagram data types. This includes identifying interest patterns, motivation cycles, learning preferences, and personalized goal opportunities...",
+                    progress=0.8
+                )
+            
             # Use the agent's structured output method with correct parameters
             self._log_memory_usage("BEFORE_MULTI_AI_CALL")
             result = await self.agent.structured_output_async(
@@ -438,7 +554,23 @@ class InstagramParserAgent:
                 prompt=prompt
             )
             self._log_memory_usage("AFTER_MULTI_AI_CALL")
+            
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="analysis_finalization",
+                    reasoning=f"AI analysis complete! Generated comprehensive insights with {len(result.categories) if hasattr(result, 'categories') else 'multiple'} content categories and detailed behavioral patterns. Finalizing results...",
+                    progress=0.95
+                )
+                
         except Exception as e:
+            if content_id:
+                broadcast_reasoning_step(
+                    content_id=content_id,
+                    step="analysis_error",
+                    reasoning=f"Multi-type analysis encountered an error: {str(e)}. This might be due to data complexity or AI processing limits.",
+                    progress=0.0
+                )
             print(f"🚨 CRITICAL ERROR: Multi-type AI analysis failed: {e}")
             self._log_memory_usage("AI_CALL_FAILED")
             raise Exception(f"Multi-type Instagram analysis failed: {str(e)}") from e
@@ -454,6 +586,15 @@ class InstagramParserAgent:
             'debug_mode': debug_mode,
             'sample_size_per_type': sample_size_per_type
         }
+        
+        if content_id:
+            broadcast_reasoning_step(
+                content_id=content_id,
+                step="analysis_complete",
+                reasoning=f"Multi-type analysis successfully completed! Your Instagram behavioral profile is ready with insights from {len(data_types)} data types and {len(all_posts)} interactions.",
+                progress=1.0
+            )
+            
         return result
     
     def _extract_posts(self, raw_data: Dict[str, Any]) -> List[InstagramPost]:
@@ -656,9 +797,9 @@ def handler(event, context):
             # Extract content ID from S3 key
             content_id = key.split('/')[-1].replace('.json', '')
             
-            # Run analysis
+            # Run analysis with streaming reasoning
             import asyncio
-            analysis = asyncio.run(agent.parse_instagram_export(raw_data))
+            analysis = asyncio.run(agent.parse_instagram_export(raw_data, content_id))
             
             # Save results
             asyncio.run(agent.save_analysis_result(content_id, analysis))
@@ -695,9 +836,9 @@ def handler(event, context):
             
             print(f"Export info: {export_info}")
             
-            # Run multi-type analysis
+            # Run multi-type analysis with streaming reasoning
             import asyncio
-            analysis = asyncio.run(agent.parse_multi_type_instagram_export(raw_data, export_info))
+            analysis = asyncio.run(agent.parse_multi_type_instagram_export(raw_data, export_info, content_id))
             
             agent._log_memory_usage("AFTER_AI_ANALYSIS")
             
