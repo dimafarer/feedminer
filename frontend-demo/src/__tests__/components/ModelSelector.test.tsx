@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import ModelSelector, { AVAILABLE_MODELS, type ModelInfo } from '../../components/ModelSelector'
+import ModelSelector, { AVAILABLE_MODELS } from '../../components/ModelSelector'
 
 describe('ModelSelector', () => {
   const mockOnModelChange = vi.fn()
