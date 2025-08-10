@@ -1,33 +1,71 @@
 # FeedMiner Cost Tracking Guide
 
-**Version**: 1.0  
-**Last Updated**: July 13, 2025  
-**Purpose**: Practical guide for monitoring and optimizing AWS costs using comprehensive tagging
+**Version**: 2.0  
+**Last Updated**: August 10, 2025  
+**Purpose**: AWS Application Manager cost tracking with frontend/backend separation using comprehensive tagging
+
+## 🎯 AWS Application Manager Integration
+
+### Cost Tracking Implementation
+
+FeedMiner uses AWS Application Manager for comprehensive cost tracking with the following key tags:
+
+**Primary Identifier**:
+- `AppManagerCFNStackKey`: `feedminer-app` (enables AWS Application Manager cost tracking)
+
+**Cost Separation Strategy**:
+- `Component`: `frontend` (Amplify hosting, CDN, etc.)  
+- `Component`: `backend` (Lambda, DynamoDB, S3, API Gateway, etc.)
+
+### Frontend vs Backend Cost Separation
+
+**Frontend Components (Amplify)**:
+```
+Technology: amplify
+Component: frontend
+Resources: Amplify app, CloudFront distribution, S3 hosting bucket
+Cost Pattern: Fixed hosting + bandwidth charges
+```
+
+**Backend Components (SAM)**:
+```
+Technology: serverless  
+Component: backend
+Resources: Lambda functions, DynamoDB tables, S3 buckets, API Gateway
+Cost Pattern: Usage-based compute + storage + data transfer
+
+**Implementation Status** (August 10, 2025):
+- ✅ 54 backend resources tagged via SAM Global Tags
+- ✅ 1 Amplify app tagged via AWS CLI  
+- ✅ AWS Application Manager cost tracking enabled
+```
 
 ## 📊 Cost Explorer Configuration
 
 ### Essential Filter Combinations
 
-**Primary Cost Filters**:
+**AWS Application Manager Cost Filters**:
 ```
-Group by: Tag -> Project
-Filter: Project = feedMiner
+Group by: Tag -> AppManagerCFNStackKey
+Filter: AppManagerCFNStackKey = feedminer-app
 Time Range: Last 30 days
+```
+
+**Frontend vs Backend Cost Separation**:
+```
+Group by: Tag -> Component
+Filter: AppManagerCFNStackKey = feedminer-app
+Granularity: Daily
+Chart Type: Stacked Area
+Expected Components: frontend, backend
 ```
 
 **Environment Breakdown**:
 ```
 Group by: Tag -> Environment
-Filter: Project = feedMiner
+Filter: AppManagerCFNStackKey = feedminer-app
+Secondary Group by: Component
 Granularity: Daily
-Chart Type: Stacked Area
-```
-
-**Technology Stack Analysis**:
-```
-Group by: Tag -> Technology
-Filter: Project = feedMiner AND Environment = prod
-Include: Service breakdown
 ```
 
 ### Cost Allocation Reports
@@ -43,7 +81,7 @@ Filter: BusinessUnit = Engineering
 ```
 Primary Dimension: Tag -> Component
 Secondary Dimension: Service
-Filter: Project = feedMiner
+Filter: AppManagerCFNStackKey = feedminer-app
 Include: Usage quantity and costs
 ```
 
@@ -57,7 +95,7 @@ Budget Name: FeedMiner-Dev-Monthly
 Amount: $200 USD
 Period: Monthly
 Filters: 
-  - Project = feedMiner
+  - AppManagerCFNStackKey = feedminer-app
   - Environment = dev
 Alerts:
   - 50% of budget ($100)
@@ -71,7 +109,7 @@ Budget Name: FeedMiner-Prod-Monthly
 Amount: $500 USD
 Period: Monthly
 Filters:
-  - Project = feedMiner
+  - AppManagerCFNStackKey = feedminer-app
   - Environment = prod
 Alerts:
   - 50% of budget ($250)
@@ -101,9 +139,9 @@ Alerts:
 Budget Name: FeedMiner-Lambda-Monthly
 Amount: $150 USD
 Filters:
-  - Project = feedMiner
-  - Technology = Serverless
-  - Component = Lambda-Function
+  - AppManagerCFNStackKey = feedminer-app
+  - Technology = serverless
+  - Component = backend
 ```
 
 **Storage Budget**:
@@ -111,39 +149,42 @@ Filters:
 Budget Name: FeedMiner-Storage-Monthly
 Amount: $100 USD
 Filters:
-  - Project = feedMiner
-  - Purpose = Primary-Content-Storage OR Content-Object-Storage
+  - AppManagerCFNStackKey = feedminer-app
+  - Component = backend
+  - Technology = serverless
 ```
 
 ## 📈 Cost Monitoring Queries
 
 ### AWS Cost Explorer Queries
 
-**Monthly Cost Trend by Environment**:
+**Monthly Cost Trend by Component**:
 ```sql
--- Pseudo-SQL for Cost Explorer
+-- Pseudo-SQL for Cost Explorer  
 SELECT 
+  Component,
   Environment,
   SUM(UnblendedCost) as Cost,
   DATE_TRUNC('month', UsageStartDate) as Month
 FROM CostAndUsage
 WHERE 
-  Tag:Project = 'feedMiner'
+  Tag:AppManagerCFNStackKey = 'feedminer-app'
   AND UsageStartDate >= '2025-01-01'
-GROUP BY Environment, Month
+GROUP BY Component, Environment, Month
 ORDER BY Month DESC, Cost DESC
 ```
 
-**Top Cost Drivers by Component**:
+**Frontend vs Backend Cost Analysis**:
 ```sql
 SELECT 
   Component,
   Technology,
   SUM(UnblendedCost) as TotalCost,
-  AVG(UnblendedCost) as DailyCost
+  AVG(UnblendedCost) as DailyCost,
+  COUNT(*) as ResourceCount
 FROM CostAndUsage
 WHERE 
-  Tag:Project = 'feedMiner'
+  Tag:AppManagerCFNStackKey = 'feedminer-app'
   AND Tag:Environment = 'prod'
   AND UsageStartDate >= DATEADD(day, -30, GETDATE())
 GROUP BY Component, Technology
@@ -186,8 +227,9 @@ AutoShutdownRule:
           {
             "action": "shutdown",
             "filters": {
-              "Project": "feedMiner",
+              "AppManagerCFNStackKey": "feedminer-app",
               "Environment": "dev",
+              "Component": "backend",
               "AutoShutdown": "Enabled"
             }
           }
@@ -315,14 +357,36 @@ aws ce get-cost-and-usage \
   --filter file://filters/feedminer-project.json
 ```
 
-**Filter Configuration (feedminer-project.json)**:
+**Filter Configuration (feedminer-app.json)**:
 ```json
 {
   "Tags": {
-    "Key": "Project",
-    "Values": ["feedMiner"],
+    "Key": "AppManagerCFNStackKey",
+    "Values": ["feedminer-app"],
     "MatchOptions": ["EQUALS"]
   }
+}
+```
+
+**Frontend/Backend Component Filter (component-filter.json)**:
+```json
+{
+  "And": [
+    {
+      "Tags": {
+        "Key": "AppManagerCFNStackKey",
+        "Values": ["feedminer-app"],
+        "MatchOptions": ["EQUALS"]
+      }
+    },
+    {
+      "Tags": {
+        "Key": "Component",
+        "Values": ["frontend", "backend"],
+        "MatchOptions": ["EQUALS"]
+      }
+    }
+  ]
 }
 ```
 
@@ -348,10 +412,35 @@ aws budgets create-budget \
   "BudgetType": "COST",
   "CostFilters": {
     "TagKey": [
-      "Project"
+      "AppManagerCFNStackKey",
+      "Environment"
     ],
     "TagValue": [
-      "feedMiner"
+      "feedminer-app",
+      "dev"
+    ]
+  }
+}
+```
+
+**Frontend Budget Configuration (feedminer-frontend-budget.json)**:
+```json
+{
+  "BudgetName": "FeedMiner-Frontend-Monthly",
+  "BudgetLimit": {
+    "Amount": "50",
+    "Unit": "USD"
+  },
+  "TimeUnit": "MONTHLY",
+  "BudgetType": "COST",
+  "CostFilters": {
+    "TagKey": [
+      "AppManagerCFNStackKey",
+      "Component"
+    ],
+    "TagValue": [
+      "feedminer-app",
+      "frontend"
     ]
   }
 }
@@ -364,30 +453,46 @@ aws budgets create-budget \
 #!/bin/bash
 # weekly-cost-report.sh
 
-PROJECT="feedMiner"
+APP_KEY="feedminer-app"
 WEEK_START=$(date -d '7 days ago' +%Y-%m-%d)
 WEEK_END=$(date +%Y-%m-%d)
 
-echo "FeedMiner Weekly Cost Report"
+echo "FeedMiner Weekly Cost Report (AWS Application Manager)"
 echo "Period: $WEEK_START to $WEEK_END"
-echo "================================="
+echo "================================================="
 
 # Get total costs
 aws ce get-cost-and-usage \
   --time-period Start=$WEEK_START,End=$WEEK_END \
   --granularity DAILY \
   --metrics UnblendedCost \
-  --filter "{\"Tags\":{\"Key\":\"Project\",\"Values\":[\"$PROJECT\"]}}" \
+  --filter "{\"Tags\":{\"Key\":\"AppManagerCFNStackKey\",\"Values\":[\"$APP_KEY\"]}}" \
   --query 'ResultsByTime[*].Total.UnblendedCost.Amount' \
   --output text | awk '{sum+=$1} END {printf "Total Weekly Cost: $%.2f\n", sum}'
 
+echo ""
+echo "Frontend vs Backend Breakdown:"
+# Get component breakdown
+aws ce get-cost-and-usage \
+  --time-period Start=$WEEK_START,End=$WEEK_END \
+  --granularity WEEKLY \
+  --metrics UnblendedCost \
+  --group-by Type=TAG,Key=Component \
+  --filter "{\"Tags\":{\"Key\":\"AppManagerCFNStackKey\",\"Values\":[\"$APP_KEY\"]}}" \
+  --query 'ResultsByTime[0].Groups[*].[Keys[0],Total.UnblendedCost.Amount]' \
+  --output text | while read component cost; do
+    printf "  %-12s: $%.2f\n" "$component" "$cost"
+  done
+
+echo ""
+echo "Environment Breakdown:"
 # Get environment breakdown
 aws ce get-cost-and-usage \
   --time-period Start=$WEEK_START,End=$WEEK_END \
   --granularity WEEKLY \
   --metrics UnblendedCost \
   --group-by Type=TAG,Key=Environment \
-  --filter "{\"Tags\":{\"Key\":\"Project\",\"Values\":[\"$PROJECT\"]}}" \
+  --filter "{\"Tags\":{\"Key\":\"AppManagerCFNStackKey\",\"Values\":[\"$APP_KEY\"]}}" \
   --query 'ResultsByTime[0].Groups[*].[Keys[0],Total.UnblendedCost.Amount]' \
   --output text | while read env cost; do
     printf "  %-12s: $%.2f\n" "$env" "$cost"
@@ -511,4 +616,4 @@ def lambda_handler(event, context):
 
 ---
 
-**This guide enables comprehensive cost tracking and optimization for the FeedMiner project using enterprise-level AWS cost management practices.**
+**This guide demonstrates the completed AWS Application Manager cost tracking implementation for FeedMiner, with full frontend/backend cost separation and enterprise-level cost management practices.**\n\n### Quick Start for Cost Analysis\n\n1. **View total app costs**: Filter by `AppManagerCFNStackKey = feedminer-app`\n2. **Compare frontend vs backend**: Group by `Component` tag\n3. **Environment analysis**: Group by `Environment` with `AppManagerCFNStackKey` filter\n4. **Run weekly reports**: Use the updated `weekly-cost-report.sh` script\n\n*AWS Application Manager implementation completed August 10, 2025*

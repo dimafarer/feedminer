@@ -1,8 +1,8 @@
 # FeedMiner AWS Cost Tagging Strategy
 
-**Version**: 1.0  
-**Last Updated**: July 13, 2025  
-**Purpose**: Enterprise-level AWS cost management and allocation
+**Version**: 2.0  
+**Last Updated**: August 10, 2025  
+**Purpose**: AWS Application Manager cost tracking with frontend/backend separation
 
 ## 📋 Executive Summary
 
@@ -185,36 +185,25 @@ Business Unit: Engineering
 
 ### SAM Template Integration
 
-**Global Tags (Applied to All Resources)**:
+**Global Tags (Applied to All Backend Resources)**:
 ```yaml
 Globals:
   Function:
     Tags:
+      # AWS Application Manager Cost Tracking
+      AppManagerCFNStackKey: feedminer-app
+      
       # Project Management
       Project: !Ref ProjectName
+      Application: !Ref ProjectName
+      Component: backend
       Owner: !Ref ResourceOwner
       Team: !Ref TeamName
       CostCenter: !Ref CostCenter
       
-      # Environment
+      # Environment & Technical
       Environment: !Ref Environment
-      Version: !Ref ApplicationVersion
-      DeployedBy: !Ref DeploymentActor
-      CreatedDate: !Ref DeploymentDate
-      
-      # Technical
-      Technology: "Serverless"
-      Architecture: "Event-Driven"
-      Runtime: "Python3.12"
-      
-      # Business
-      BusinessUnit: !Ref BusinessUnit
-      Application: "feedMiner"
-      Service: "ContentProcessing"
-      
-      # Operational
-      MonitoringLevel: !Ref MonitoringLevel
-      AutoShutdown: !Ref AutoShutdown
+      Technology: serverless
 ```
 
 ### Resource-Specific Tagging
@@ -358,23 +347,23 @@ Monthly Reviews:
 
 ## 🚀 Implementation Roadmap
 
-### Phase 1: Core Implementation (July 13, 2025)
+### Phase 1: Core Implementation (COMPLETED August 10, 2025)
 - [x] Define comprehensive tagging strategy
-- [ ] Update SAM template with base tag implementation
-- [ ] Add required CloudFormation parameters
-- [ ] Test deployment with full tagging
+- [x] Update SAM template with AWS Application Manager tags
+- [x] Add AppManagerCFNStackKey=feedminer-app to all resources
+- [x] Test deployment with full tagging
 
-### Phase 2: Cost Tracking Setup (July 16, 2025)
-- [ ] Configure Cost Explorer with tag-based filters
-- [ ] Set up budget alerts by tag combinations
-- [ ] Create chargeback reporting templates
-- [ ] Implement automated cost notifications
+### Phase 2: Cost Tracking Setup (COMPLETED August 10, 2025)
+- [x] Configure Cost Explorer with tag-based filters
+- [x] Set up frontend/backend cost separation using Component tags
+- [x] Implement Amplify frontend tagging via AWS CLI
+- [x] Verify AWS Application Manager cost tracking functionality
 
-### Phase 3: Advanced Features (July 19, 2025)
+### Phase 3: Advanced Features (August 2025)
+- [x] Frontend/backend cost separation implemented
 - [ ] Tag-based resource lifecycle automation
 - [ ] Compliance monitoring and alerting
 - [ ] Cost optimization recommendations by tags
-- [ ] Multi-environment cost comparison dashboards
 
 ### Phase 4: Enterprise Integration (Future)
 - [ ] Integration with corporate financial systems

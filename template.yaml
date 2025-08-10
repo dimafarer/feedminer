@@ -154,6 +154,19 @@ Globals:
     Runtime: python3.12
     Timeout: 30
     MemorySize: 512
+    Tags:
+      # AWS Application Manager Cost Tracking
+      AppManagerCFNStackKey: feedminer-app
+      # Project Management Tags
+      Project: !Ref ProjectName
+      Application: !Ref ProjectName
+      Component: backend
+      Owner: !Ref ResourceOwner
+      Team: !Ref TeamName
+      CostCenter: !Ref CostCenter
+      # Environment & Technical Tags  
+      Environment: !Ref Environment
+      Technology: serverless
     Environment:
       Variables:
         ENVIRONMENT: !Ref Environment
@@ -174,50 +187,6 @@ Globals:
     Tracing: Active
     Architectures:
       - arm64
-    # Comprehensive Cost Tracking Tags - Applied to ALL Lambda Functions
-    Tags:
-      # === PROJECT MANAGEMENT TAGS ===
-      Project: !Ref ProjectName
-      Owner: !Ref ResourceOwner
-      Team: !Ref TeamName
-      CostCenter: !Ref CostCenter
-      RequestedBy: !Ref RequestedBy
-      
-      # === ENVIRONMENT & LIFECYCLE TAGS ===
-      Environment: !Ref Environment
-      Stage: !Ref Environment
-      Version: !Ref ApplicationVersion
-      DeployedBy: !Ref DeploymentActor
-      CreatedDate: !Ref DeploymentDate
-      LastModified: !Ref "AWS::StackId"  # Will be updated on each deployment
-      
-      # === TECHNICAL ARCHITECTURE TAGS ===
-      Technology: "Serverless"
-      Architecture: "Event-Driven"
-      Runtime: "Python3.12"
-      Purpose: "Compute"
-      Component: "Lambda-Function"
-      
-      # === BUSINESS CONTEXT TAGS ===
-      BusinessUnit: !Ref BusinessUnit
-      Application: "feedMiner"
-      Service: "ContentProcessing"
-      CustomerImpact: !Ref CustomerImpact
-      BusinessValue: !Ref BusinessValue
-      
-      # === OPERATIONAL MANAGEMENT TAGS ===
-      MonitoringLevel: !Ref MonitoringLevel
-      BackupSchedule: "Automatic"  # Lambda code is version-controlled
-      AutoShutdown: !Ref AutoShutdown
-      MaintenanceWindow: !Ref MaintenanceWindow
-      SupportLevel: !Ref SupportLevel
-      
-      # === COMPLIANCE & GOVERNANCE TAGS ===
-      DataClassification: !Ref DataClassification
-      RetentionPeriod: "Code-Repository"  # Source code retention
-      ComplianceFramework: !Ref ComplianceFramework
-      EncryptionRequired: "Required"
-      AuditScope: "In-Scope"
   
 
 Conditions:
