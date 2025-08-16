@@ -30,13 +30,9 @@ fi
 echo "📦 Activating virtual environment..."
 source feedminer-env/bin/activate
 
-# Install development dependencies
-echo "📥 Installing development dependencies..."
-pip install -r requirements-dev.txt
-
-# Install additional development tools
-echo "🛠 Installing development tools..."
-pip install pytest pytest-asyncio black flake8 mypy
+# Install all dependencies
+echo "📥 Installing dependencies..."
+pip install -r requirements.txt
 
 # Check AWS CLI
 if command -v aws &> /dev/null; then

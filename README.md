@@ -195,7 +195,7 @@ source feedminer-env/bin/activate
 # Manual setup
 python3 -m venv feedminer-env
 source feedminer-env/bin/activate
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 
 # Build and validate
 sam build
@@ -519,7 +519,7 @@ feedminer/
 │   ├── API.md        # API reference
 │   └── DEPLOYMENT.md # Deployment guide
 ├── template.yaml      # SAM CloudFormation template
-├── requirements-dev.txt # Development dependencies
+├── requirements.txt     # All dependencies
 ├── CHANGELOG.md       # Version history
 └── README.md         # This documentation
 ```
