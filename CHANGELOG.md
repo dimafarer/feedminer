@@ -5,6 +5,46 @@ All notable changes to FeedMiner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-08-16 - "Production Enhancements & Project Organization"
+
+### Added - Production Features
+- **🎭 Live AI Reasoning Stream**: Real-time display of AI thinking process during analysis
+  - WebSocket-based streaming of reasoning steps from Lambda to React frontend
+  - 9 distinct analysis phases with progress tracking and auto-scrolling display
+  - Enhances user experience by showing AI thought process instead of static loading
+  - Production-ready with graceful degradation when WebSocket unavailable
+- **📄 MIT License**: Open source licensing with comprehensive disclaimers
+  - Enables public contributions and community involvement
+  - Clear intellectual property protection and usage terms
+- **💰 AWS Application Manager Cost Tracking**: Enterprise-grade cost management
+  - Frontend/backend separation for detailed cost allocation
+  - Integration with AWS cost management tools and dashboards
+
+### Changed - Project Organization
+- **📁 Comprehensive File Organization**: Major cleanup of project structure
+  - Moved test files from root to `tests/integration/` directories
+  - Relocated documentation from root to `docs/` subdirectories  
+  - Consolidated requirements files into single `requirements.txt`
+  - Removed redundant `.env.template` in favor of comprehensive `.env.example`
+- **📚 Enhanced Documentation**: Complete Strands implementation guides
+  - Added `STRANDS_MODEL_SWITCHING_HOWTO.md` (practical implementation guide)
+  - Added `STRANDS_STEP_BY_STEP_GUIDE.md` (tutorial with code examples)
+  - Moved `STREAMING_REASONING_IMPLEMENTATION.md` and `WEBSOCKET_DEBUGGING_PLAN.md` to docs/
+
+### Fixed - Security & Dependencies
+- **🔒 Security Update**: Updated starlette to v0.47.2 to fix DoS vulnerability
+  - Addresses potential denial-of-service vector in multipart form parsing
+  - Maintains backward compatibility with existing functionality
+- **🧹 Dependency Cleanup**: Streamlined development dependencies
+  - Removed unused `requirements-dev.txt` and `requirements-lambda.txt`
+  - Single comprehensive `requirements.txt` for all dependencies
+  - Updated setup scripts and documentation to reflect unified approach
+
+### Documentation
+- **Complete Implementation Guides**: Step-by-step tutorials for Strands integration
+- **Project Organization**: Clean separation of concerns with logical file structure
+- **Developer Experience**: Simplified setup with single requirements file and clear documentation
+
 ## [0.4.0] - 2025-08-02 - "Strands Agent Model Switching Implementation"
 
 ### Added - AWS Strands Integration

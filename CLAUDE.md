@@ -5,7 +5,7 @@
 FeedMiner is a serverless AWS application that processes exported saved content from social media platforms (Instagram, Twitter, Reddit, etc.) and provides AI-powered analysis for goal-setting and behavioral insights. The project uses AWS SAM, Python 3.12+, and integrates with multiple AI providers through AWS Bedrock including Anthropic Claude, Amazon Nova, and Meta Llama models.
 
 **Status**: Public open-source project (February 2025)  
-**Version**: v0.4.0 (Multi-Model AI Integration - 6 models across 3 AI families)
+**Version**: v0.4.1 (Production Enhancements & Project Organization)
 
 ## Architecture & Technology Stack
 
