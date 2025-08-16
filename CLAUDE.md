@@ -207,7 +207,7 @@ npm run test       # Run tests
 
 ### Configuration Files (Python Backend)
 - `template.yaml`: AWS SAM CloudFormation template (main infrastructure)
-- `.env.example` & `.env.template`: Environment variable templates
+- `.env.example`: Environment variable template with all configuration options
 - `requirements*.txt`: Python dependencies for different contexts
 
 ### Key Source Files (Python Backend)
